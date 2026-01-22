@@ -40,3 +40,7 @@ export type UserTimetableSets = {
     user_id: string;
     timetable_set_id: string;
 };
+
+export type Version = {
+    version: string;
+}

@@ -1,6 +1,7 @@
 import LocalDateDisplay from "@/components/ui/dashboard/localdate";
 import LocalTimeDisplay from "@/components/ui/dashboard/localtime";
 import CurrentCard from "@/app/ui/dashboard/currentcard";
+import VersionTest from "../ui/dashboard/versiontest";
 
 export default function DashboardPage() {
     return (
@@ -14,8 +15,9 @@ export default function DashboardPage() {
                 <p className="text-gray-500 dark:text-gray-500">This is a placeholder for dashboard content.</p>
             </div>
             <div>
-                <CurrentCard/>
+                <CurrentCard />
             </div>
+            <VersionTest />
         </div>
     );
 }
