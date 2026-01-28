@@ -41,20 +41,6 @@ async function createTimetableBlockTable() {
             start_time TIME NOT NULL,
             end_time TIME NOT NULL,
             day_of_week VARCHAR(10) NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-    `;
-    return { message: "Table created" };
-}
-
-async function createTimetableEntryTable() {
-  await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
-  await sql`
-        CREATE TABLE IF NOT EXISTS timetable_entries (
-            id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-            timetable_set_id UUID NOT NULL,
-            timetable_block_id UUID NOT NULL,
             subject VARCHAR(255) NOT NULL,
             location VARCHAR(255) NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -63,6 +49,22 @@ async function createTimetableEntryTable() {
     `;
     return { message: "Table created" };
 }
+
+// async function createTimetableEntryTable() {
+//   await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
+//   await sql`
+//         CREATE TABLE IF NOT EXISTS timetable_entries (
+//             id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+//             timetable_set_id UUID NOT NULL,
+//             timetable_block_id UUID NOT NULL,
+//             subject VARCHAR(255) NOT NULL,
+//             location VARCHAR(255) NOT NULL,
+//             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+//             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+//         );
+//     `;
+//     return { message: "Table created" };
+// }
 
 async function createUserTimetableSetsTable() {
   await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;

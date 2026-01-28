@@ -19,6 +19,8 @@ export type TimetableSet = {
 export type TimetableBlock = {
   id: string;
   timetable_set_id: string;
+  subject: string;
+  location: string;
   start_time: string;
   end_time: string;
   day_of_week:

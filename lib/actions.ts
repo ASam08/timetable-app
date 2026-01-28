@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 
 const sql = postgres(process.env.POSTGRES_URL!);
 
-const user_id = "123e4567-e89b-12d3-a456-426614174000"; // Placeholder for the authenticated user's ID
+const user_id = "123e4567-e89b-12d3-a456-426614174000"; //TODO: Placeholder for the authenticated user's ID
 
 const TimetableSetSchema = z.object({
     id: z.string(),
@@ -58,6 +58,7 @@ const TimetableBlockSchema = z.object({
     timetable_set_id: z.string(),
     day: z.enum(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]),
     subject: z.string().min(1, "Subject is required"),
+    location: z.string().min(1, "Location is required"),
     start_time: z.string().min(1, "Start time is required"),
     end_time: z.string().min(1, "End time is required"),
 });
@@ -69,6 +70,7 @@ export async function addTimetableBlock(formData: FormData) {
         timetable_set_id: /*formData.get("timetable_set_id"),*/ testingSetId,
         day: formData.get("day"),
         subject: formData.get("subject"),
+        location: formData.get("location"),
         start_time: formData.get("start_time"),
         end_time: formData.get("end_time"),
     });
@@ -80,12 +82,12 @@ export async function addTimetableBlock(formData: FormData) {
             consoleLog: console.log(validatedFields.error),
         };
     }
-    const { timetable_set_id, day, subject, start_time, end_time } = validatedFields.data;
+    const { timetable_set_id, day, subject, location, start_time, end_time } = validatedFields.data;
 
     try {
         await sql`
-            INSERT INTO timetable_blocks (timetable_set_id, day, subject, start_time, end_time)
-            VALUES (${timetable_set_id}, ${day}, ${subject}, ${start_time}, ${end_time})
+            INSERT INTO timetable_blocks (timetable_set_id, day_of_week, subject, location, start_time, end_time)
+            VALUES (${timetable_set_id}, ${day}, ${subject}, ${location}, ${start_time}, ${end_time})
         `;
         console.log(`Timetable block for ${subject} on ${day} created successfully`);
     } catch (error) {
@@ -95,6 +97,6 @@ export async function addTimetableBlock(formData: FormData) {
             error,
         };
     }
-    // revalidatePath("/dashboard/timetable");
-    // redirect("/dashboard/timetable");
+    revalidatePath("/dashboard/timetable");
+    redirect("/dashboard/timetable");
 }   

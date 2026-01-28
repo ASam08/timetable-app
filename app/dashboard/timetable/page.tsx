@@ -1,14 +1,30 @@
 import ToggleFormVisibility from "@/app/ui/timetable/toggleformvisibility"
 import Timetable from "@/app/ui/timetable/timetable"
-import AddTimetableBlock from "@/app/ui/timetable/addtimetableblock";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { PlusIcon, PlusCircle } from "lucide-react";
 
 export default function timetablePage() {
     const dow=["Time", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
     return (
         <div className="flex h-full flex-col px-3 py-4 md:px-2">
             <h1 className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-200">Timetable</h1>
-            <ToggleFormVisibility />
-            <AddTimetableBlock />
+            <div className="flex flex-rows">
+                <div className="flex grow">
+                    <ToggleFormVisibility/>
+                </div>
+                <div className="flex grow justify-end">
+                    <Link href='\dashboard\timetable\add-block'>
+                        <Button className="text-white bg-blue-600 hidden sm:flex">
+                            <PlusCircle /> Add Timetable Block
+                        </Button>
+                        <Button className="text-white bg-blue-600 sm:hidden flex">
+                            <PlusCircle />
+                        </Button>
+                    </Link>
+                </div>
+            </div>
+            
             <Timetable />
         </div> 
     )
