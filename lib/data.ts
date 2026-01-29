@@ -1,6 +1,7 @@
 "use server";
 
 import postgres from "postgres";
+import { RetreivedTimetableBlocks } from "./definitions";
 
 const sql = postgres(process.env.POSTGRES_URL!);
 
@@ -16,7 +17,7 @@ export async function testConnection() {
   }
 }
 
-export async function getTimetableSets() {
+export async function getTimetableSets(user_id:string) {
   try {
     const result = await sql`
       SELECT id FROM timetable_sets
@@ -27,5 +28,17 @@ export async function getTimetableSets() {
   } catch (error) {
     console.error("Error fetching timetable sets:", error);
     return null;
+  }
+}
+
+export async function getTimetableBlocks(timetable_set_id:string) {
+  try {
+    const blocks = await sql<RetreivedTimetableBlocks[]>`
+    SELECT id, start_time, end_time, day_of_week, subject, location FROM timetable_blocks
+    WHERE timetable_set_id = ${timetable_set_id}
+    `;
+    return blocks;
+  } catch (error) {
+    console.error("Error fetching timetable blocks:", error);
   }
 }

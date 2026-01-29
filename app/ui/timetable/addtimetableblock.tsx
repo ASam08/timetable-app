@@ -15,11 +15,23 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { addTimetableBlock } from "@/lib/actions";
 import { getTimetableSets } from "@/lib/data";
 import Link from "next/link";
+import { useState } from "react";
 
 export default function AddTimetableBlock() {
-    const dow = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    const dow = [
+    { label: "Monday", value: 1 },
+    { label: "Tuesday", value: 2 },
+    { label: "Wednesday", value: 3 },
+    { label: "Thursday", value: 4 },
+    { label: "Friday", value: 5 },
+    { label: "Saturday", value: 6 },
+    { label: "Sunday", value: 7 },
+    ];
+
     const formAction = addTimetableBlock;
     const timetable_set_id = getTimetableSets;
+    const [dayValue, setDayValue] = useState<string>("");
+
 
     return (
         <form action={formAction}>
@@ -34,21 +46,33 @@ export default function AddTimetableBlock() {
             <div className="grid gap-4">
                 <div className="grid gap-3">
                     <Label>Day</Label>
-                    <Combobox  items={dow}>
-                        <ComboboxInput placeholder="Select a day" id="day" name="day" type="text" />
-                        <ComboboxContent >
-                            <ComboboxEmpty>No days found.</ComboboxEmpty>
-                            <ComboboxList >
-                                {(item) => (
-                                    <ComboboxItem key={item} value={item}>
-                                        {item}
-                                    </ComboboxItem>
-                                )}
-                            </ComboboxList>
+
+                    <Combobox value={dayValue} onValueChange={setDayValue}>
+                        <ComboboxInput
+                        placeholder="Select a day"
+                        value={dow.find(d => String(d.value) === dayValue)?.label ?? ""}
+                        readOnly
+                        />
+
+                        <ComboboxContent>
+                        <ComboboxEmpty>No days found.</ComboboxEmpty>
+
+                        <ComboboxList>
+                            {dow.map((item) => (
+                            <ComboboxItem
+                                key={item.value}
+                                value={String(item.value)}
+                            >
+                                {item.label}
+                            </ComboboxItem>
+                            ))}
+                        </ComboboxList>
                         </ComboboxContent>
                     </Combobox>
-                    {/* <Input type="text" placeholder="e.g. Monday" /> */}
-                </div>
+
+                    {/* This is what the server action reads */}
+                    <input type="hidden" name="day_of_week" value={dayValue} />
+                    </div>
                 <div className="grid gap-3">
                     <Label>Subject</Label>
                     <Input type="text" id="subject" name="subject" placeholder="e.g. Maths" />

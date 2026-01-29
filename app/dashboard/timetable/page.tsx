@@ -3,6 +3,7 @@ import Timetable from "@/app/ui/timetable/timetable"
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { PlusIcon, PlusCircle } from "lucide-react";
+import TimetableGridServer from "@/app/ui/timetable/timetablegridserver"
 
 export default function timetablePage() {
     const dow=["Time", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -25,7 +26,7 @@ export default function timetablePage() {
                 </div>
             </div>
             
-            <Timetable />
+            <TimetableGridServer />
         </div> 
     )
 }

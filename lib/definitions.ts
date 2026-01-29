@@ -54,3 +54,12 @@ export type UserTimetableSets = {
 export type Version = {
   version: string;
 };
+
+export type RetreivedTimetableBlocks = {
+  id: string;
+  subject: string;
+  location: string;
+  start_time: string;
+  end_time: string;
+  day_of_week: number;
+};
