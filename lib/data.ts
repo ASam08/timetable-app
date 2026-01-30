@@ -2,6 +2,8 @@
 
 import postgres from "postgres";
 import { RetreivedTimetableBlocks } from "./definitions";
+import LocalDateDisplay from "@/components/ui/dashboard/localdate";
+import LocalTimeDisplay from "@/components/ui/dashboard/localtime";
 
 const sql = postgres(process.env.POSTGRES_URL!);
 
@@ -40,5 +42,20 @@ export async function getTimetableBlocks(timetable_set_id:string) {
     return blocks;
   } catch (error) {
     console.error("Error fetching timetable blocks:", error);
+  }
+}
+
+export async function getCurrentBlock(timetable_set_id: string, dayOfWeekNumber: number, time: string) {
+  try {
+    const current = await sql<RetreivedTimetableBlocks[]>`
+    SELECT id, start_time, end_time, day_of_week, subject, location FROM timetable_blocks
+    WHERE timetable_set_id = ${timetable_set_id} AND day_of_week = ${dayOfWeekNumber} AND start_time <= ${time} AND end_time > ${time}
+    LIMIT 1
+    `;
+    console.log(current)
+    return current[0] ?? null
+  } catch (error) {
+    console.log("Error fetching timetable block:", error);
+    return null;
   }
 }

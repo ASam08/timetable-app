@@ -4,19 +4,23 @@ import { useEffect, useState } from "react";
 import { RetreivedTimetableBlocks } from "@/lib/definitions";
 
 const startHour = 8;
-const hoursCovered = 10;
-const slotMinutes = 10;
+const hoursCovered = 9;
+const slotMinutes = 15;
 
 const rows = (hoursCovered * 60) / slotMinutes;
-
 
 const dow = ["Time","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 const middow = ["Time","Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 const shortdow = ["","M","Tu","W","Th","F","Sa","Su"];
 
+const minSlotMinutes = 5; // Always use 5-minute resolution
+const virtualRows = (hoursCovered * 60) / minSlotMinutes;
+const slotsPerHour = 60 / minSlotMinutes;
+const visibleSlotInterval = slotMinutes / minSlotMinutes;
+
 function timeToRow(time: string) {
   const [h, m] = time.split(":").map(Number);
-  return ((h - startHour) * 60 + m) / slotMinutes;
+  return ((h - startHour) * 60 + m) / minSlotMinutes;
 }
 
 export function TimetableGrid({ events = [], }: { events?: RetreivedTimetableBlocks[]; }) {
@@ -32,14 +36,14 @@ export function TimetableGrid({ events = [], }: { events?: RetreivedTimetableBlo
   const labels =
     width > 900 ? dow :
     width > 600 ? middow :
-    shortdow;
+        shortdow;
 
   return (
     <div className="overflow-auto border border-slate-700">
       <div
         className="grid grid-cols-[60px_repeat(7,1fr)] min-w-[700px]"
         style={{
-          gridTemplateRows: `40px repeat(${rows}, 16px)`,
+          gridTemplateRows: `40px repeat(${virtualRows}, 8px)`,
         }}
       >
         {/* ===== Header ===== */}
@@ -59,22 +63,21 @@ export function TimetableGrid({ events = [], }: { events?: RetreivedTimetableBlo
         ))}
 
         {/* ===== Time Column ===== */}
-        {Array.from({ length: rows }).map((_, i) => {
-          const slotsPerHour = 60 / slotMinutes;
-          const showLabel = i % slotsPerHour === 0;
+        {Array.from({ length: virtualRows }).map((_, i) => {
+          const showLabel = i % visibleSlotInterval === 0;
           const hour = startHour + i / slotsPerHour;
-
           return (
             <div
               key={`t-${i}`}
-              className="
-                border border-slate-700
-                text-xs text-slate-400
-                pr-1 text-right
-              "
+              className={`
+              text-xs text-slate-400
+              pr-1 text-right
+              ${showLabel ? "border-t border-slate-700" : ""}
+              border-r border-l border-slate-700
+              `}
               style={{ gridColumn: 1, gridRow: i + 2 }}
             >
-              {showLabel && `${String(hour).padStart(2, "0")}:00`}
+              {showLabel && `${String(Math.floor(hour)).padStart(2, "0")}:${String((hour % 1) * 60).padStart(2, "0")}`}
             </div>
           );
         })}
@@ -82,29 +85,39 @@ export function TimetableGrid({ events = [], }: { events?: RetreivedTimetableBlo
         {/* ===== Events ===== */}
         {events.map(e => {
           const start = Math.max(0, timeToRow(e.start_time));
-          const end = Math.min(rows, timeToRow(e.end_time));
-
-          if (end <= 0 || start >= rows) return null;
-
+          const end = Math.min(virtualRows, timeToRow(e.end_time));
+          if (end <= 0 || start >= virtualRows) return null;
           return (
             <div
               key={e.id}
               className="
-                rounded bg-blue-600 text-white text-xs
+                rounded-lg border-blue-800 border bg-blue-600 text-white text-xs
                 px-1 py-0.5 m-[1px]
                 overflow-hidden
+                flex flex-col h-full
               "
               style={{
                 gridColumn: +e.day_of_week + 1,
                 gridRow: `${start + 2} / ${end + 2}`,
               }}
             >
-              <div className="flex justify-center py-1 font-bold">
-                {e.subject}
-              </div>
-              <div className="flex align-text-bottom py-1">
-                {e.location}
-              </div>
+              <div className="flex flex-col h-full">
+                <div className="justify-start flex grow p-0.5">
+                  {e.start_time.slice(0, 5)}
+                  </div>
+                <div className="flex-1 flex items-center justify-center font-bold">
+                  {e.subject}
+                </div>
+                <div className="flex-row flex grow items-end">
+                
+                <div className="flex grow justify-start p-0.5">
+                  {e.end_time.slice(0, 5)}
+                  </div>
+                  <div className="flex grow justify-end p-0.5">
+                  {e.location}
+                </div>
+                  </div>
+                </div>
             </div>
           );
         })}

@@ -83,7 +83,7 @@ export async function GET() {
     await createUserTable();
     await createTimetableSetTable();
     await createTimetableBlockTable();
-    await createTimetableEntryTable();
+    // await createTimetableEntryTable();
     await createUserTimetableSetsTable();
     return Response.json({ message: "Database tables created successfully." });
   } catch (error) {

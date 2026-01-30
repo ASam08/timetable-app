@@ -17,7 +17,7 @@ export default function Layout({
 }>) {
     return (
         <html lang="en" suppressHydrationWarning>
-            <body className={`bg-stone-200 dark:bg-gray-950 ${geistSans.className} ${geistMono.className} antialiased`}>
+            <body className={`${geistSans.className} ${geistMono.className} antialiased`}>
                 <ThemeProvider
                     attribute="class"
                     defaultTheme="system"
@@ -32,7 +32,7 @@ export default function Layout({
                         </div>
                     </div>
                     <div className="flex h-screen flex-col md:flex-row md:overflow-hidden">
-                        <div className="w-full flex-none md:w-64">
+                        <div className="w-full flex-none md:w-48">
                             <SideNav />
                         </div>
                         <div className="grow p-4 md:overflow-y-auto md:p-6">{children}</div>

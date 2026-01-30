@@ -1,4 +1,3 @@
-// TimetableGridServer.tsx (NO "use client")
 import { getTimetableBlocks } from "@/lib/data";
 import { TimetableGrid } from "./newtimetable";
 
