@@ -29,9 +29,3 @@ const LocalDateDisplay = () => {
 };
 
 export default LocalDateDisplay;
-
-
-// Returns the raw Date object
-// export const getRawLocalDate = () => {
-//   return new Date();
-// };

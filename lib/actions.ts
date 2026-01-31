@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import postgres from "postgres";
 import { z } from "zod";
 import { redirect } from "next/navigation";
+import { getTimetableSets, getCurrentBlock } from "./data";
 
 const sql = postgres(process.env.POSTGRES_URL!);
 
@@ -100,3 +101,21 @@ export async function addTimetableBlock(formData: FormData) {
     revalidatePath("/dashboard/timetable");
     redirect("/dashboard/timetable");
 }   
+
+export async function fetchCurrentBlock(
+  user_id: string,
+  dayOfWeek: number,
+  time: string
+) {
+  const sets = await getTimetableSets(user_id);
+
+  // Defensive guard
+  if (!Array.isArray(sets) || sets.length === 0) {
+    console.warn("No timetable sets found for user:", user_id);
+    return null;
+  }
+
+  const timetableSetId = sets[0].id;
+
+  return getCurrentBlock(timetableSetId, dayOfWeek, time);
+}

@@ -21,15 +21,18 @@ export async function testConnection() {
 
 export async function getTimetableSets(user_id:string) {
   try {
-    const result = await sql`
+    const result = await sql < { id: string }[]>`
       SELECT id FROM timetable_sets
       WHERE owner_id = ${user_id}
       LIMIT 1
     `;
-    return result[0];
+
+      console.log("RAW RESULT:", result);
+  console.log("ROWS:", (result as any).rows);
+    return result;
   } catch (error) {
     console.error("Error fetching timetable sets:", error);
-    return null;
+    return [];
   }
 }
 
@@ -45,17 +48,20 @@ export async function getTimetableBlocks(timetable_set_id:string) {
   }
 }
 
-export async function getCurrentBlock(timetable_set_id: string, dayOfWeekNumber: number, time: string) {
-  try {
-    const current = await sql<RetreivedTimetableBlocks[]>`
-    SELECT id, start_time, end_time, day_of_week, subject, location FROM timetable_blocks
-    WHERE timetable_set_id = ${timetable_set_id} AND day_of_week = ${dayOfWeekNumber} AND start_time <= ${time} AND end_time > ${time}
+export async function getCurrentBlock(
+  timetable_set_id: string,
+  dayOfWeek: number,
+  time: string
+): Promise<RetreivedTimetableBlocks | null> {
+  const result = await sql<RetreivedTimetableBlocks[]>`
+    SELECT id, start_time, end_time, day_of_week, subject, location
+    FROM timetable_blocks
+    WHERE timetable_set_id = ${timetable_set_id}
+      AND day_of_week = ${dayOfWeek}
+      AND start_time <= ${time}::time
+      AND end_time > ${time}::time
     LIMIT 1
-    `;
-    console.log(current)
-    return current[0] ?? null
-  } catch (error) {
-    console.log("Error fetching timetable block:", error);
-    return null;
-  }
+  `;
+
+  return result[0] ?? null;
 }
