@@ -119,3 +119,23 @@ export async function fetchCurrentBlock(
 
   return getCurrentBlock(timetableSetId, dayOfWeek, time);
 }
+
+export async function deleteBlock(id: string) {
+    const blockId = id;
+
+    try {
+        await sql`
+            DELETE FROM timetable_blocks
+            WHERE id = ${blockId}
+            `;
+        console.log("Block %a deleted", blockId);
+        revalidatePath('/dashboard/timetable');
+    } catch (error) {
+        console.error("Block ID not found: ", blockId)
+        console.error("Error - ",error)
+        return {
+            message: "Error deleting block",
+            error,
+        };
+    }
+}

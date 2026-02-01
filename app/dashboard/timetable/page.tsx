@@ -1,12 +1,10 @@
 import ToggleFormVisibility from "@/app/ui/timetable/toggleformvisibility"
-import Timetable from "@/app/ui/timetable/timetable"
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { PlusIcon, PlusCircle } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 import TimetableGridServer from "@/app/ui/timetable/timetablegridserver"
 
 export default function timetablePage() {
-    const dow=["Time", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
     return (
         <div className="flex h-full flex-col px-3 py-4 md:px-2">
             <h1 className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-200">Timetable</h1>
