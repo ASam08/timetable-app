@@ -2,6 +2,7 @@ import LocalDateDisplay from "@/components/ui/dashboard/localdate";
 import LocalTimeDisplay from "@/components/ui/dashboard/localtime";
 import CurrentCardClient from "@/app/ui/dashboard/currentcardclient";
 import VersionTest from "../ui/dashboard/versiontest";
+import NextCardClient from "../ui/dashboard/nextcardclient";
 
 export default function DashboardPage() {
     
@@ -12,11 +13,9 @@ export default function DashboardPage() {
                 <div className="flex-none basis-3/4 self-end text-gray-600 dark:text-gray-400">Welcome to your dashboard! Here you can manage your timetable and settings.</div>
                 <div className="flex-3 basis-1/4 text-right"><LocalDateDisplay/><br/><LocalTimeDisplay/></div>
             </div>
-            <div className="mt-6 p-4 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg">
-                <p className="text-gray-500 dark:text-gray-500">This is a placeholder for dashboard content.</p>
-            </div>
-            <div>
+            <div className="flex flex-column md:flex-row gap-4">
                 <CurrentCardClient />
+                <NextCardClient />
             </div>
             <VersionTest />
         </div>

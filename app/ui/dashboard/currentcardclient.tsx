@@ -39,7 +39,7 @@ export default function CurrentCardClient() {
 
   if (loading) {
     return (
-      <div className="mt-6 w-1/3 max-w-64 p-4 border-2 border-dashed rounded-lg">
+      <div className="mt-6 w-1/3 max-w-64 p-4 border-2 border-dashed rounded-lg animate-pulse">
         <p className="text-gray-500">Loading…</p>
       </div>
     );
@@ -48,7 +48,7 @@ export default function CurrentCardClient() {
   if (!block) {
     return (
       <div className="mt-6 w-1/3 max-w-64 p-4 border-2 border-dashed rounded-lg">
-        <p className="text-gray-500">No current block</p>
+        <p className="text-gray-500">Nowhere to be right now!</p>
       </div>
     );
   }

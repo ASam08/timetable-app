@@ -65,3 +65,21 @@ export async function getCurrentBlock(
 
   return result[0] ?? null;
 }
+
+export async function getNextBlock(
+  timetable_set_id: string,
+  dayOfWeek: number,
+  time: string
+): Promise<RetreivedTimetableBlocks | null> {
+  const result = await sql<RetreivedTimetableBlocks[]>`
+    SELECT id, start_time, end_time, day_of_week, subject, location
+    FROM timetable_blocks
+    WHERE timetable_set_id = ${timetable_set_id}
+      AND day_of_week = ${dayOfWeek}
+      AND start_time > ${time}::time
+    ORDER BY start_time
+    LIMIT 1
+  `;
+
+  return result[0] ?? null;
+}
