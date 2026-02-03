@@ -15,7 +15,7 @@ const rows = (hoursCovered * 60) / slotMinutes;
 
 const dow = ["Time","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 const middow = ["Time","Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-const shortdow = ["","M","Tu","W","Th","F","Sa","Su"];
+const shortdow = ["Time","M","Tu","W","Th","F","Sa","Su"];
 
 const minSlotMinutes = 5; // Always use 5-minute resolution
 const virtualRows = (hoursCovered * 60) / minSlotMinutes;
@@ -52,7 +52,7 @@ export function TimetableGrid({ events = [], }: { events?: RetreivedTimetableBlo
   
 
   return (
-    <div>
+    <div className="">
       <div className="w-full flex grow mb-1">
         <div className="flex grow justify-end">
           <Button
@@ -69,7 +69,7 @@ export function TimetableGrid({ events = [], }: { events?: RetreivedTimetableBlo
         </div>
       </div>
       
-      <div className="overflow-auto border border-slate-700">
+      <div className="h-100 overflow-auto border border-slate-700">
         <div
           className="grid grid-cols-[60px_repeat(7,1fr)] min-w-[700px]"
           style={{
@@ -80,12 +80,13 @@ export function TimetableGrid({ events = [], }: { events?: RetreivedTimetableBlo
           {labels.map((label, i) => (
             <div
               key={`h-${i}`}
-              className="
-                sticky top-0 z-10
+              className={`
+                sticky top-0 z-12
                 flex items-center justify-center
                 border border-slate-700
                 bg-slate-800 text-white font-semibold text-sm
-            "
+                ${i==0 ? "z-13 left-0":""}
+            `}
               style={{ gridColumn: i + 1, gridRow: 1 }}
             >
               {label}
@@ -95,19 +96,26 @@ export function TimetableGrid({ events = [], }: { events?: RetreivedTimetableBlo
           {/* ===== Time Column ===== */}
           {Array.from({ length: virtualRows }).map((_, i) => {
             const showLabel = i % visibleSlotInterval === 0;
-            const hour = startHour + i / slotsPerHour;
+            const totalMinutes = i * minSlotMinutes;
+            const hour = startHour + Math.floor(totalMinutes / 60);
+            const minute = totalMinutes % 60;
+            const label = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
             return (
               <div
                 key={`t-${i}`}
                 className={`
-                text-xs text-slate-400
-                pr-1 text-right
-                ${showLabel ? "border-t border-slate-700" : ""}
-                border-r border-l border-slate-700
+                  sticky left-0 z-10 bg-slate-900 h-3 w-full flex items-center justify-end
+                  text-xs text-slate-400 pr-1 text-right
+                  ${showLabel ? "border-t overflow-visible z-11 h-3 border-slate-700" : ""}
+                  border-r border-l border-slate-700
                 `}
                 style={{ gridColumn: 1, gridRow: i + 2 }}
               >
-                {showLabel && `${String(Math.floor(hour)).padStart(2, "0")}:${String((hour % 1) * 60).padStart(2, "0")}`}
+                {showLabel ? (
+                  minute === 0 ? <span className="font-bold">{label}</span> : label
+                ) : (
+                  <span>&nbsp;</span>
+                )}
               </div>
             );
           })}

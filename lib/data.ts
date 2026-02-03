@@ -27,8 +27,6 @@ export async function getTimetableSets(user_id:string) {
       LIMIT 1
     `;
 
-      console.log("RAW RESULT:", result);
-  console.log("ROWS:", (result as any).rows);
     return result;
   } catch (error) {
     console.error("Error fetching timetable sets:", error);
