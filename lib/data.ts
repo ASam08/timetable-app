@@ -1,13 +1,11 @@
 "use server";
 
 import postgres from "postgres";
-import { RetreivedTimetableBlocks } from "./definitions";
-import LocalDateDisplay from "@/components/ui/dashboard/localdate";
-import LocalTimeDisplay from "@/components/ui/dashboard/localtime";
+import { RetreivedTimetableBlocks } from "@/lib/definitions";
+import { sqlConn } from "@/lib/db";
 
-const sql = postgres(process.env.POSTGRES_URL!);
-
-const user_id = "123e4567-e89b-12d3-a456-426614174000"; //TODO: Placeholder for the authenticated user's ID
+const sql = postgres(process.env.POSTGRES_URL!); //Only uncomment one of these lines
+// const sql = sqlConn //Only uncomment one of these lines
 
 export async function testConnection() {
   try {

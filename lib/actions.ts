@@ -4,9 +4,11 @@ import { revalidatePath } from "next/cache";
 import postgres from "postgres";
 import { z } from "zod";
 import { redirect } from "next/navigation";
-import { getTimetableSets, getCurrentBlock, getNextBlock } from "./data";
+import { getTimetableSets, getCurrentBlock, getNextBlock } from "@/lib/data";
+import { sqlConn } from "@/lib/db";
 
-const sql = postgres(process.env.POSTGRES_URL!);
+const sql = postgres(process.env.POSTGRES_URL!); //Only uncomment one of these lines
+// const sql = sqlConn //Only uncomment one of these lines
 
 const user_id = "123e4567-e89b-12d3-a456-426614174000"; //TODO: Placeholder for the authenticated user's ID
 
@@ -53,7 +55,6 @@ export async function createNewTimetableSet(formData: FormData) {
     redirect("/dashboard/timetable");
 }
 
-const testingSetId = "33aed625-6c60-46f3-9446-d7330bfce1e8" //TODO: Placeholder for testing timetable block creation
 const TimetableBlockSchema = z.object({
     id: z.string(),
     timetable_set_id: z.string(),
@@ -67,8 +68,10 @@ const TimetableBlockSchema = z.object({
 const createTimetableBlock = TimetableBlockSchema.omit({ id: true });
 
 export async function addTimetableBlock(formData: FormData) {
+    const set_id = await getTimetableSets(user_id);
+    console.log (set_id)
     const validatedFields = createTimetableBlock.safeParse({
-        timetable_set_id: /*formData.get("timetable_set_id"),*/ testingSetId,
+        timetable_set_id: /*formData.get("timetable_set_id"),*/ set_id[0].id,
         day: Number(formData.get("day_of_week")),
         subject: formData.get("subject"),
         location: formData.get("location"),

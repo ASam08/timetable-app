@@ -24,12 +24,8 @@ export default function NextCardClient() {
 
       // JS: Sun=0 → DB: Sun=7
       const jsDay = now.getDay();
-        const dayOfWeek = jsDay === 0 ? 7 : jsDay;
-        console.log("Day of week:", dayOfWeek)
-
-        const time = now.toTimeString().slice(0, 8);
-        console.log("Time: ", time)
-
+      const dayOfWeek = jsDay === 0 ? 7 : jsDay;
+      const time = now.toTimeString().slice(0, 8);
       const Next = await fetchNextBlock(
         user_id,
         dayOfWeek,
@@ -61,7 +57,7 @@ export default function NextCardClient() {
   if (loading) {
     return (
       <div className="w-full md:w-1/3 max-w-64 p-4 border-2 border-dashed rounded-lg animate-pulse">
-        <p className="text-gray-500">Loading…</p>
+        <p className="text-gray-400">Loading…</p>
       </div>
     );
   }
@@ -69,7 +65,7 @@ export default function NextCardClient() {
   if (!block) {
     return (
       <div className="w-full md:w-1/3 max-w-64 p-4 border-2 border-dashed rounded-lg">
-        <p className="text-gray-500">Looks like you're free for the rest of the day!</p>
+        <p className="text-gray-400">Looks like you're free for the rest of the day!</p>
       </div>
     );
   }
@@ -77,7 +73,7 @@ export default function NextCardClient() {
     
   return (
     <div className="w-full md:w-1/3 max-w-64 p-4 border-2 rounded-lg">
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-400">
             {minutesUntilNext === -1 && "Starting now"}
             {minutesUntilNext === 0 && "Starting in less than 1 minute"}
             {minutesUntilNext === 1 && "Starting in 1 minute"}

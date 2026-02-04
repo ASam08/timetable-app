@@ -1,9 +1,9 @@
-import { getTimetableBlocks } from "@/lib/data";
+import { getTimetableBlocks, getTimetableSets } from "@/lib/data";
 import { TimetableGrid } from "./newtimetable";
 
 export default async function TimetableGridServer() {
-  const testingSetId = '33aed625-6c60-46f3-9446-d7330bfce1e8' //TODO: Placeholder for testing timetable block creation
-    const events = await getTimetableBlocks(testingSetId);
-    console.log (events)
+  const user_id = "123e4567-e89b-12d3-a456-426614174000"; // TODO: auth
+  const setId = await getTimetableSets(user_id)
+  const events = await getTimetableBlocks(setId[0].id);
   return <TimetableGrid events={events ?? []} />;
 }

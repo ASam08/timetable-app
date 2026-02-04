@@ -52,7 +52,7 @@ export function TimetableGrid({ events = [], }: { events?: RetreivedTimetableBlo
   
 
   return (
-    <div className="">
+    <div className="max-h-full">
       <div className="w-full flex grow mb-1">
         <div className="flex grow justify-end">
           <Button
@@ -69,7 +69,7 @@ export function TimetableGrid({ events = [], }: { events?: RetreivedTimetableBlo
         </div>
       </div>
       
-      <div className="h-100 overflow-auto border border-slate-700">
+      <div className="max-h-100 xl:max-h-175 overflow-auto border border-slate-700">
         <div
           className="grid grid-cols-[60px_repeat(7,1fr)] min-w-[700px]"
           style={{
