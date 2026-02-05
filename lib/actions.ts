@@ -7,8 +7,8 @@ import { redirect } from "next/navigation";
 import { getTimetableSets, getCurrentBlock, getNextBlock } from "@/lib/data";
 import { sqlConn } from "@/lib/db";
 
-const sql = postgres(process.env.POSTGRES_URL!); //Only uncomment one of these lines
-// const sql = sqlConn //Only uncomment one of these lines
+// const sql = postgres(process.env.POSTGRES_URL!); //Only uncomment one of these lines
+const sql = sqlConn //Only uncomment one of these lines
 
 const user_id = "123e4567-e89b-12d3-a456-426614174000"; //TODO: Placeholder for the authenticated user's ID
 
@@ -16,12 +16,12 @@ const TimetableSetSchema = z.object({
     id: z.string(),
     owner_id: z.string(),
     title: z.string().min(1, "Title is required"),
-    description: z.string().optional(),
+    description: z.string().optional().nullable(),
 });
 
 const createTimetableSet = TimetableSetSchema.omit({ id: true });
 
-export async function createNewTimetableSet(formData: FormData) {
+export async function createNewTimetableSet(prevState: any, formData: FormData) {
     const validatedFields = createTimetableSet.safeParse({
         owner_id: user_id,
         title: formData.get("title"),
@@ -40,7 +40,7 @@ export async function createNewTimetableSet(formData: FormData) {
     try {
         await sql`
             INSERT INTO timetable_sets (owner_id, title, description)
-            VALUES (${owner_id}, ${title}, ${description})
+            VALUES (${owner_id}, ${title}, ${description ?? null})
         `;
         console.log(`Timetable set ${title} created successfully`);
     } catch (error) {
@@ -64,12 +64,24 @@ const TimetableBlockSchema = z.object({
     start_time: z.string().min(1, "Start time is required"),
     end_time: z.string().min(1, "End time is required"),
 });
+// }).refine((data) => {
+//     const startTimeDate = new Date(`1970-01-01T${data.start_time}:00`);
+//     const endTimeDate = new Date(`1970-01-01T${data.end_time}:00`);
+
+//     return endTimeDate > startTimeDate;
+// }, {
+//     message: "End time must be after start time",
+//     path: ["end_time"],
+// });
 
 const createTimetableBlock = TimetableBlockSchema.omit({ id: true });
 
-export async function addTimetableBlock(formData: FormData) {
+export async function addTimetableBlock( prevState: any, formData: FormData) {
     const set_id = await getTimetableSets(user_id);
-    console.log (set_id)
+    if (!set_id || set_id.length === 0) {
+        console.warn("No timetable sets found for user", user_id);
+        return null; // or empty state
+    }
     const validatedFields = createTimetableBlock.safeParse({
         timetable_set_id: /*formData.get("timetable_set_id"),*/ set_id[0].id,
         day: Number(formData.get("day_of_week")),
@@ -77,7 +89,7 @@ export async function addTimetableBlock(formData: FormData) {
         location: formData.get("location"),
         start_time: formData.get("start_time"),
         end_time: formData.get("end_time"),
-    });
+    })
     console.log("Validated Fields:", validatedFields);
     if (!validatedFields.success) {
         return {

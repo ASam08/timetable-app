@@ -4,8 +4,8 @@ import postgres from "postgres";
 import { RetreivedTimetableBlocks } from "@/lib/definitions";
 import { sqlConn } from "@/lib/db";
 
-const sql = postgres(process.env.POSTGRES_URL!); //Only uncomment one of these lines
-// const sql = sqlConn //Only uncomment one of these lines
+// const sql = postgres(process.env.POSTGRES_URL!); //Only uncomment one of these lines
+const sql = sqlConn //Only uncomment one of these lines
 
 export async function testConnection() {
   try {
@@ -41,6 +41,7 @@ export async function getTimetableBlocks(timetable_set_id:string) {
     return blocks;
   } catch (error) {
     console.error("Error fetching timetable blocks:", error);
+    return [];
   }
 }
 

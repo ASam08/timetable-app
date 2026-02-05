@@ -1,20 +1,18 @@
 import postgres from "postgres";
 
-const DB_HOST = process.env.DB_HOST ?? "db";
-const DB_PORT = process.env.DB_PORT ?? "5432";
-const DB_USER = process.env.DB_USER;
-const DB_PASSWORD = process.env.DB_PASSWORD;
-const DB_NAME = process.env.DB_NAME ?? "timetable";
+const POSTGRES_HOST = process.env.POSTGRES_HOST ?? "db";
+const POSTGRES_PORT = process.env.POSTGRES_PORT ?? "5432";
+const POSTGRES_USER = process.env.POSTGRES_USER ?? "timetable";
+const POSTGRES_PASSWORD = process.env.POSTGRES_PASSWORD ?? "timetable";
+const POSTGRES_DB = process.env.POSTGRES_DB ?? "timetable";
 
-if (!DB_USER || !DB_PASSWORD) {
-  throw new Error("Missing database environment variables");
-}
+// if (!POSTGRES_USER || !POSTGRES_PASSWORD) {
+//   throw new Error("Missing database environment variables");
+// }
 
 const DATABASE_URL =
-  `postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}`;
+  `postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}`;
 
 export const sqlConn = postgres(DATABASE_URL, {
-  ssl: process.env.NODE_ENV === "production"
-    ? { rejectUnauthorized: false }
-    : false,
+  ssl: false, // Docker local network
 });

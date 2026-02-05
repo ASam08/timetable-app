@@ -4,6 +4,8 @@ import Link from "next/link";
 import { PlusCircle } from "lucide-react";
 import TimetableGridServer from "@/app/ui/timetable/timetablegridserver"
 
+export const dynamic = "force-dynamic";
+
 export default function timetablePage() {
     return (
         <div className="flex h-full flex-col px-3 py-4 md:px-2">
