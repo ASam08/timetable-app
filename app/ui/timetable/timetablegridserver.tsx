@@ -4,7 +4,7 @@ import { TimetableGrid } from "./newtimetable";
 export default async function TimetableGridServer() {
   const user_id = "123e4567-e89b-12d3-a456-426614174000"; // TODO: auth
   const setId = await getTimetableSets(user_id)
-  if (!setId) return (
+  if (!setId || setId.length === 0) return (
     <div className="" >
       You haven't created a timetable yet
     </div>
