@@ -50,6 +50,11 @@ export function TimetableGrid({ events = [], }: { events?: RetreivedTimetableBlo
     width > 600 ? middow :
         shortdow;
   
+  if (!events || events.length === 0) return (
+    <div className="" >
+      You haven't created a timetable yet
+    </div>
+  )
 
   return (
     <div className="max-h-full">
@@ -121,7 +126,7 @@ export function TimetableGrid({ events = [], }: { events?: RetreivedTimetableBlo
           })}
 
           {/* ===== Events ===== */}
-          {events.map(e => {
+          {(events ?? []).filter(Boolean).map(e => {
             const start = Math.max(0, timeToRow(e.start_time));
             const end = Math.min(virtualRows, timeToRow(e.end_time));
             if (end <= 0 || start >= virtualRows) return null;

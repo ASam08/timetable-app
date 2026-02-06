@@ -1,9 +1,9 @@
 import { createNewTimetableSet } from "@/lib/actions";
+import { useActionState } from "react";
 
-
-
+const initialState = {};
 export default function CreateTimetable() {
-    const formAction = createNewTimetableSet;
+    const [state, formAction] = useActionState(createNewTimetableSet, initialState);
 
     return (
         <form action={formAction} className="flex mb-4 flex-col gap-4 p-4 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg max-w-md">

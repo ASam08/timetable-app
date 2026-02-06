@@ -13,11 +13,16 @@ import {
 } from "@/components/ui/combobox";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { addTimetableBlock } from "@/lib/actions";
-import { getTimetableSets } from "@/lib/data";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useActionState } from "react";
+
+
+const initialState = {};
 
 export default function AddTimetableBlock() {
+    const [state, formAction] = useActionState(addTimetableBlock, initialState);
+    const [dayValue, setDayValue] = useState<string>("");
+
     const dow = [
     { label: "Monday", value: 1 },
     { label: "Tuesday", value: 2 },
@@ -27,11 +32,6 @@ export default function AddTimetableBlock() {
     { label: "Saturday", value: 6 },
     { label: "Sunday", value: 7 },
     ];
-
-    const formAction = addTimetableBlock;
-    const timetable_set_id = getTimetableSets;
-    const [dayValue, setDayValue] = useState<string>("");
-
 
     return (
         <form action={formAction}>
@@ -47,7 +47,7 @@ export default function AddTimetableBlock() {
                 <div className="grid gap-3">
                     <Label>Day</Label>
 
-                    <Combobox value={dayValue} onValueChange={setDayValue}>
+                    <Combobox value={dayValue} onValueChange={(value) => setDayValue(value ?? "")}>
                         <ComboboxInput
                         placeholder="Select a day"
                         value={dow.find(d => String(d.value) === dayValue)?.label ?? ""}
