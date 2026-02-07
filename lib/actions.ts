@@ -1,16 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import postgres from "postgres";
 import { z } from "zod";
 import { redirect } from "next/navigation";
-import { getTimetableSets, getCurrentBlock, getNextBlock } from "@/lib/data";
+import { getTimetableSets, getCurrentBlock, getNextBlock, getUserID } from "@/lib/data";
 import { sqlConn } from "@/lib/db";
 
-// const sql = postgres(process.env.POSTGRES_URL!); //Only uncomment one of these lines
-const sql = sqlConn //Only uncomment one of these lines
-
-const user_id = "123e4567-e89b-12d3-a456-426614174000"; //TODO: Placeholder for the authenticated user's ID
+const sql = sqlConn
+const user_id = await getUserID() ?? crypto.randomUUID();
 
 const TimetableSetSchema = z.object({
     id: z.string(),

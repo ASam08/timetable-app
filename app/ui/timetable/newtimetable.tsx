@@ -50,12 +50,6 @@ export function TimetableGrid({ events = [], }: { events?: RetreivedTimetableBlo
     width > 600 ? middow :
         shortdow;
   
-  if (!events || events.length === 0) return (
-    <div className="" >
-      You haven't created a timetable yet
-    </div>
-  )
-
   return (
     <div className="max-h-full">
       <div className="w-full flex grow mb-1">

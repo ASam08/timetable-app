@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { fetchNextBlock } from "@/lib/actions";
 import { RetreivedTimetableBlocks } from "@/lib/definitions";
+import { getUserID } from "@/lib/data";
 
 function timeToMinutes(time?: string | null): number | null {
   if (!time) return null;
@@ -11,48 +12,58 @@ function timeToMinutes(time?: string | null): number | null {
 }
 
 export default function NextCardClient() {
-    const [block, setBlock] = useState<RetreivedTimetableBlocks | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [minutesUntilNext, setMinutesUntilNext] = useState<number | null>(null);
-
-
-  const user_id = "123e4567-e89b-12d3-a456-426614174000"; // TODO: auth
+  const [block, setBlock] = useState<RetreivedTimetableBlocks | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [minutesUntilNext, setMinutesUntilNext] = useState<number | null>(null);
+  const [hoursUntilNext, setHoursUntilNext] = useState<number | null>(null);
+  const [foundUserId, setFoundUserId] = useState(true);
 
   useEffect(() => {
     const update = async () => {
-      const now = new Date();
 
-      // JS: Sun=0 → DB: Sun=7
-      const jsDay = now.getDay();
-      const dayOfWeek = jsDay === 0 ? 7 : jsDay;
-      const time = now.toTimeString().slice(0, 8);
-      const Next = await fetchNextBlock(
-        user_id,
-        dayOfWeek,
-        time
-      );
-        
+      const user_id = await getUserID();
 
+      if (!user_id || user_id.length === 0) {
+        setFoundUserId(false)
+      } else {
+        const now = new Date();
+        // JS: Sun=0 → DB: Sun=7
+        const jsDay = now.getDay();
+        const dayOfWeek = jsDay === 0 ? 7 : jsDay;
+        const time = now.toTimeString().slice(0, 8);
+        const Next = await fetchNextBlock(
+          user_id,
+          dayOfWeek,
+          time
+        );
         const nowMinutes = timeToMinutes(time);
         const nextMinutes = timeToMinutes(Next?.start_time);
 
         if (nowMinutes !== null && nextMinutes !== null) {
-            setMinutesUntilNext(nextMinutes - nowMinutes - 1);
+          setMinutesUntilNext(nextMinutes - nowMinutes - 1);
         } else {
-            setMinutesUntilNext(null)
-        }
+          setMinutesUntilNext(null)
+        };
 
-        
-      setBlock(Next);
-        setLoading(false);
-        
-        
+        if (minutesUntilNext !== null && minutesUntilNext > 59) {
+          setHoursUntilNext(Math.trunc(minutesUntilNext / 60));
+          setMinutesUntilNext(minutesUntilNext % 60);          
+        };
+
+        setBlock(Next);
+      }
+      setLoading(false);
     };
 
     update(); // initial fetch
     const id = setInterval(update, 1_000);
     return () => clearInterval(id);
   }, []);
+
+  if (!foundUserId) return (
+        <>
+        </>
+      );
 
   if (loading) {
     return (
@@ -73,11 +84,13 @@ export default function NextCardClient() {
     
   return (
     <div className="w-full md:w-1/3 max-w-64 p-4 border-2 rounded-lg">
-        <p className="text-sm text-gray-400">
-            {minutesUntilNext === -1 && "Starting now"}
-            {minutesUntilNext === 0 && "Starting in less than 1 minute"}
-            {minutesUntilNext === 1 && "Starting in 1 minute"}
-            {minutesUntilNext !== null && minutesUntilNext > 1 && `Starting in ${minutesUntilNext} minutes`}
+      <p className="text-sm text-gray-400">
+        {/* TODO - bug fix hours */}
+          {minutesUntilNext === -1 && "Starting now"}
+          {minutesUntilNext === 0 && "Starting in less than 1 minute"}
+          {minutesUntilNext === 1 && "Starting in 1 minute"}
+          {minutesUntilNext !== null && minutesUntilNext > 1 && hoursUntilNext === null && `Starting in ${minutesUntilNext} minutes`}
+          {hoursUntilNext !== null && `Starting in ${hoursUntilNext} hour and ${minutesUntilNext} minutes`}
         </p>
       <p className="font-bold">{block.subject}</p>
       <p className="text-sm">{block.location}</p>

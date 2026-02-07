@@ -1,11 +1,9 @@
 "use server";
 
-import postgres from "postgres";
 import { RetreivedTimetableBlocks } from "@/lib/definitions";
 import { sqlConn } from "@/lib/db";
 
-// const sql = postgres(process.env.POSTGRES_URL!); //Only uncomment one of these lines
-const sql = sqlConn //Only uncomment one of these lines
+const sql = sqlConn
 
 export async function testConnection() {
   try {
@@ -14,6 +12,20 @@ export async function testConnection() {
     return data;
   } catch (error) {
     console.error("Database connection failed:", error);
+  }
+}
+
+export async function getUserID() {
+  if (process.env.AUTH === "true") return null; //TODO: When auth implemented, return the userID here
+  try {
+    const result = await sql<{ id: string }[]>`
+      SELECT DISTINCT owner_id AS id FROM timetable_sets
+      LIMIT 1
+    `;
+    return result[0]?.id ?? null;
+  } catch (error) {
+    console.error("Error retrieving user ID: ", error);
+    return null;
   }
 }
 

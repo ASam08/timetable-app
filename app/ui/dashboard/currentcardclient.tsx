@@ -3,28 +3,32 @@
 import { useEffect, useState } from "react";
 import { fetchCurrentBlock } from "@/lib/actions";
 import { RetreivedTimetableBlocks } from "@/lib/definitions";
+import { getUserID } from "@/lib/data";
 
 export default function CurrentCardClient() {
   const [block, setBlock] = useState<RetreivedTimetableBlocks | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const user_id = "123e4567-e89b-12d3-a456-426614174000"; // TODO: auth
+  const [foundUserId, setFoundUserId] = useState(true);
 
   useEffect(() => {
     const update = async () => {
-      const now = new Date();
+      const user_id = await getUserID();
+      if (!user_id || user_id.length === 0) {
+        setFoundUserId(false)
+      } else {
+        const now = new Date();
+        // JS: Sun=0 → DB: Sun=7
+        const jsDay = now.getDay();
+        const dayOfWeek = jsDay === 0 ? 7 : jsDay;
+        const time = now.toTimeString().slice(0, 8);
+        const current = await fetchCurrentBlock(
+          user_id,
+          dayOfWeek,
+          time
+        );
 
-      // JS: Sun=0 → DB: Sun=7
-      const jsDay = now.getDay();
-      const dayOfWeek = jsDay === 0 ? 7 : jsDay;
-      const time = now.toTimeString().slice(0, 8);
-      const current = await fetchCurrentBlock(
-        user_id,
-        dayOfWeek,
-        time
-      );
-
-      setBlock(current);
+        setBlock(current);
+      }  
       setLoading(false);
     };
 
@@ -32,6 +36,13 @@ export default function CurrentCardClient() {
     const id = setInterval(update, 60_000);
     return () => clearInterval(id);
   }, []);
+
+
+  if (!foundUserId) return (
+        <div className="w-full md:w-1/3 max-w-64 p-4 border-2 border-dashed rounded-lg">
+          <p className="text-gray-400">Nothing to see here, add a timetable to get started!</p>
+        </div>
+      );
 
   if (loading) {
     return (
