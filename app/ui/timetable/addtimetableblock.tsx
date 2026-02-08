@@ -12,15 +12,13 @@ import {
     ComboboxEmpty,
 } from "@/components/ui/combobox";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { addTimetableBlock } from "@/lib/actions";
+import { addTimetableBlock, BlockState } from "@/lib/actions";
 import Link from "next/link";
 import { useState, useActionState } from "react";
 
-
-const initialState = {};
-
 export default function AddTimetableBlock() {
-    const [state, formAction] = useActionState(addTimetableBlock, initialState);
+    const initialState: BlockState = { message: null, errors: {} };
+    const [state, formAction] = useActionState(addTimetableBlock, initialState); // TODO - sort out state could be null issue
     const [dayValue, setDayValue] = useState<string>("");
 
     const dow = [
@@ -72,14 +70,39 @@ export default function AddTimetableBlock() {
 
                     {/* This is what the server action reads */}
                     <input type="hidden" name="day_of_week" value={dayValue} />
+                    {/* TODO - Sort out why this isn't working*/}
+                    <div id="day_error" aria-live="polite" aria-atomic="true">
+                        {state.errors?.day &&
+                        state.errors.day.map((error: string) => (
+                            <p className="text-sm text-red-500" key={error}>
+                                {error}
+                            </p>))
+                        }
+                    </div>
                     </div>
                 <div className="grid gap-3">
                     <Label>Subject</Label>
                     <Input type="text" id="subject" name="subject" placeholder="e.g. Maths" />
+                    <div id="subject_error" aria-live="polite" aria-atomic="true">
+                        {state.errors?.subject &&
+                        state.errors.subject.map((error: string) => (
+                            <p className="text-sm text-red-500" key={error}>
+                                {error}
+                            </p>))
+                        }
+                    </div>
                 </div>
                 <div className="grid gap-3">
                     <Label>Location</Label>
                     <Input type="text" id="location" name="location" placeholder="e.g. Room 101" />
+                    <div id="location_error" aria-live="polite" aria-atomic="true">
+                        {state.errors?.location &&
+                        state.errors.location.map((error: string) => (
+                            <p className="text-sm text-red-500" key={error}>
+                                {error}
+                            </p>))
+                        }
+                    </div>
                 </div>
                 <div className="grid-cols-2 flex gap-8">
                     <div className="grid gap-3">
@@ -94,6 +117,14 @@ export default function AddTimetableBlock() {
                             className="pr-4 bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
                             />
                         </Field>
+                        <div id="start_time_error" aria-live="polite" aria-atomic="true">
+                            {state.errors?.start_time &&
+                            state.errors.start_time.map((error: string) => (
+                                <p className="text-sm text-red-500" key={error}>
+                                    {error}
+                                </p>))
+                            }
+                        </div>
                     </div>
                     <div className="grid gap-3">
                         <Field className="flex">
@@ -107,10 +138,19 @@ export default function AddTimetableBlock() {
                             className="pr-4 bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
                             />
                         </Field>
+                        
                         {/* <Field className="hidden">
                             <Input id="timetable_set_id" readOnly/>{timetable_set_id}
                         </Field> */}
                     </div> 
+                    <div id="end_time_error" aria-live="polite" aria-atomic="true">
+                        {state.errors?.end_time &&
+                        state.errors.end_time.map((error: string) => (
+                            <p className="text-sm text-red-500" key={error}>
+                                {error}
+                            </p>))
+                        }
+                    </div>
                 </div>
             </div>
             <div className="flex flex-row py-4 gap-4">

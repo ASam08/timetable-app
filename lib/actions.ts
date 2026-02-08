@@ -52,7 +52,19 @@ export async function createNewTimetableSet(prevState: any, formData: FormData) 
     redirect("/dashboard/timetable");
 }
 
-const TimetableBlockSchema = z.object({
+export type BlockState = {
+    errors?: {
+        timetable_set_id?: string[];
+        day?: number[];
+        subject?: string[];
+        location?: string[];
+        start_time?: string[];
+        end_time?: string[];
+    };
+    message?: string | null;
+};
+
+const originalTimetableBlockSchema = z.object({
     id: z.string(),
     timetable_set_id: z.string(),
     day: z.number().int(),
@@ -61,19 +73,22 @@ const TimetableBlockSchema = z.object({
     start_time: z.string().min(1, "Start time is required"),
     end_time: z.string().min(1, "End time is required"),
 });
-// }).refine((data) => {
-//     const startTimeDate = new Date(`1970-01-01T${data.start_time}:00`);
-//     const endTimeDate = new Date(`1970-01-01T${data.end_time}:00`);
 
-//     return endTimeDate > startTimeDate;
-// }, {
-//     message: "End time must be after start time",
-//     path: ["end_time"],
-// });
 
-const createTimetableBlock = TimetableBlockSchema.omit({ id: true });
+const createTimetableBlock = originalTimetableBlockSchema
+    .omit({ id: true })
+    .refine((data) => {
+    const startTimeDate = new Date(`1970-01-01T${data.start_time}:00`);
+    const endTimeDate = new Date(`1970-01-01T${data.end_time}:00`);
 
-export async function addTimetableBlock( prevState: any, formData: FormData) {
+    return endTimeDate > startTimeDate;
+}, {
+    message: "End time must be after start time",
+    path: ["end_time"],
+});
+
+
+export async function addTimetableBlock( prevState: BlockState, formData: FormData) {
     const set_id = await getTimetableSets(user_id);
     if (!set_id || set_id.length === 0) {
         console.warn("No timetable sets found for user", user_id);
