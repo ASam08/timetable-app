@@ -4,13 +4,12 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
-    Combobox,
-    ComboboxContent,
-    ComboboxInput,
-    ComboboxItem,
-    ComboboxList,
-    ComboboxEmpty,
-} from "@/components/ui/combobox";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { addTimetableBlock, BlockState } from "@/lib/actions";
 import Link from "next/link";
@@ -45,31 +44,22 @@ export default function AddTimetableBlock() {
                 <div className="grid gap-3">
                     <Label>Day</Label>
 
-                    <Combobox value={dayValue} onValueChange={(value) => setDayValue(value ?? "")}>
-                        <ComboboxInput
-                        placeholder="Select a day"
-                        value={dow.find(d => String(d.value) === dayValue)?.label ?? ""}
-                        readOnly
-                        />
+                    <Select name="day_of_week">
+                        <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select a day" />
+                        </SelectTrigger>
 
-                        <ComboboxContent>
-                        <ComboboxEmpty>No days found.</ComboboxEmpty>
-
-                        <ComboboxList>
-                            {dow.map((item) => (
-                            <ComboboxItem
-                                key={item.value}
-                                value={String(item.value)}
-                            >
-                                {item.label}
-                            </ComboboxItem>
+                        <SelectContent
+                            position="popper"
+                        >
+                            {dow.map(day => (
+                            <SelectItem key={day.value} value={String(day.value)}>
+                                {day.label}
+                            </SelectItem>
                             ))}
-                        </ComboboxList>
-                        </ComboboxContent>
-                    </Combobox>
+                        </SelectContent>
+                    </Select>
 
-                    {/* This is what the server action reads */}
-                    <input type="hidden" name="day_of_week" value={dayValue} />
                     {/* TODO - Sort out why this isn't working*/}
                     <div id="day_error" aria-live="polite" aria-atomic="true">
                         {state.errors?.day &&

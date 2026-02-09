@@ -67,7 +67,7 @@ export type BlockState = {
 const originalTimetableBlockSchema = z.object({
     id: z.string(),
     timetable_set_id: z.string(),
-    day: z.number().int(),
+    day: z.number().int("Choose a day"),
     subject: z.string().min(1, "Subject is required"),
     location: z.string().min(1, "Location is required"),
     start_time: z.string().min(1, "Start time is required"),
