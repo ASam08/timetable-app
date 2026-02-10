@@ -18,7 +18,6 @@ import { useState, useActionState } from "react";
 export default function AddTimetableBlock() {
     const initialState: BlockState = { message: null, errors: {} };
     const [state, formAction] = useActionState(addTimetableBlock, initialState); // TODO - sort out state could be null issue
-    const [dayValue, setDayValue] = useState<string>("");
 
     const dow = [
     { label: "Monday", value: 1 },
@@ -94,7 +93,7 @@ export default function AddTimetableBlock() {
                         }
                     </div>
                 </div>
-                <div className="grid-cols-2 flex gap-8">
+                <div className="grid-cols-3 flex gap-8">
                     <div className="grid gap-3">
                         <Field className="flex">
                             <FieldLabel htmlFor="start-time-picker">Start Time</FieldLabel>
@@ -133,7 +132,7 @@ export default function AddTimetableBlock() {
                             <Input id="timetable_set_id" readOnly/>{timetable_set_id}
                         </Field> */}
                     </div> 
-                    <div id="end_time_error" aria-live="polite" aria-atomic="true">
+                    <div className="grid pt-5 items-center" id="end_time_error" aria-live="polite" aria-atomic="true">
                         {state.errors?.end_time &&
                         state.errors.end_time.map((error: string) => (
                             <p className="text-sm text-red-500" key={error}>

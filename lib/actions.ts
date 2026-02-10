@@ -55,7 +55,7 @@ export async function createNewTimetableSet(prevState: any, formData: FormData) 
 export type BlockState = {
     errors?: {
         timetable_set_id?: string[];
-        day?: number[];
+        day?: string[];
         subject?: string[];
         location?: string[];
         start_time?: string[];
@@ -67,7 +67,11 @@ export type BlockState = {
 const originalTimetableBlockSchema = z.object({
     id: z.string(),
     timetable_set_id: z.string(),
-    day: z.number().int("Choose a day"),
+    day: z.coerce
+    .number({error: "Choose a day"})
+    .int()
+    .min(1, "Choose a day")
+    .max(7, "Choose a valid day"),
     subject: z.string().min(1, "Subject is required"),
     location: z.string().min(1, "Location is required"),
     start_time: z.string().min(1, "Start time is required"),
@@ -90,19 +94,14 @@ const createTimetableBlock = originalTimetableBlockSchema
 
 export async function addTimetableBlock( prevState: BlockState, formData: FormData) {
     const set_id = await getTimetableSets(user_id);
-    if (!set_id || set_id.length === 0) {
-        console.warn("No timetable sets found for user", user_id);
-        return null; // or empty state
-    }
     const validatedFields = createTimetableBlock.safeParse({
         timetable_set_id: /*formData.get("timetable_set_id"),*/ set_id[0].id,
-        day: Number(formData.get("day_of_week")),
+        day: formData.get("day_of_week"),
         subject: formData.get("subject"),
         location: formData.get("location"),
         start_time: formData.get("start_time"),
         end_time: formData.get("end_time"),
     })
-    console.log("Validated Fields:", validatedFields);
     if (!validatedFields.success) {
         return {
             errors: validatedFields.error.flatten().fieldErrors,
