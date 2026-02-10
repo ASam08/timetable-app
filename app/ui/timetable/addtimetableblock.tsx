@@ -4,24 +4,20 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
-    Combobox,
-    ComboboxContent,
-    ComboboxInput,
-    ComboboxItem,
-    ComboboxList,
-    ComboboxEmpty,
-} from "@/components/ui/combobox";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { addTimetableBlock } from "@/lib/actions";
+import { addTimetableBlock, BlockState } from "@/lib/actions";
 import Link from "next/link";
 import { useState, useActionState } from "react";
 
-
-const initialState = {};
-
 export default function AddTimetableBlock() {
-    const [state, formAction] = useActionState(addTimetableBlock, initialState);
-    const [dayValue, setDayValue] = useState<string>("");
+    const initialState: BlockState = { message: null, errors: {} };
+    const [state, formAction] = useActionState(addTimetableBlock, initialState); // TODO - sort out state could be null issue
 
     const dow = [
     { label: "Monday", value: 1 },
@@ -47,41 +43,57 @@ export default function AddTimetableBlock() {
                 <div className="grid gap-3">
                     <Label>Day</Label>
 
-                    <Combobox value={dayValue} onValueChange={(value) => setDayValue(value ?? "")}>
-                        <ComboboxInput
-                        placeholder="Select a day"
-                        value={dow.find(d => String(d.value) === dayValue)?.label ?? ""}
-                        readOnly
-                        />
+                    <Select name="day_of_week">
+                        <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select a day" />
+                        </SelectTrigger>
 
-                        <ComboboxContent>
-                        <ComboboxEmpty>No days found.</ComboboxEmpty>
-
-                        <ComboboxList>
-                            {dow.map((item) => (
-                            <ComboboxItem
-                                key={item.value}
-                                value={String(item.value)}
-                            >
-                                {item.label}
-                            </ComboboxItem>
+                        <SelectContent
+                            position="popper"
+                        >
+                            {dow.map(day => (
+                            <SelectItem key={day.value} value={String(day.value)}>
+                                {day.label}
+                            </SelectItem>
                             ))}
-                        </ComboboxList>
-                        </ComboboxContent>
-                    </Combobox>
+                        </SelectContent>
+                    </Select>
 
-                    {/* This is what the server action reads */}
-                    <input type="hidden" name="day_of_week" value={dayValue} />
+                    {/* TODO - Sort out why this isn't working*/}
+                    <div id="day_error" aria-live="polite" aria-atomic="true">
+                        {state.errors?.day &&
+                        state.errors.day.map((error: string) => (
+                            <p className="text-sm text-red-500" key={error}>
+                                {error}
+                            </p>))
+                        }
+                    </div>
                     </div>
                 <div className="grid gap-3">
                     <Label>Subject</Label>
                     <Input type="text" id="subject" name="subject" placeholder="e.g. Maths" />
+                    <div id="subject_error" aria-live="polite" aria-atomic="true">
+                        {state.errors?.subject &&
+                        state.errors.subject.map((error: string) => (
+                            <p className="text-sm text-red-500" key={error}>
+                                {error}
+                            </p>))
+                        }
+                    </div>
                 </div>
                 <div className="grid gap-3">
                     <Label>Location</Label>
                     <Input type="text" id="location" name="location" placeholder="e.g. Room 101" />
+                    <div id="location_error" aria-live="polite" aria-atomic="true">
+                        {state.errors?.location &&
+                        state.errors.location.map((error: string) => (
+                            <p className="text-sm text-red-500" key={error}>
+                                {error}
+                            </p>))
+                        }
+                    </div>
                 </div>
-                <div className="grid-cols-2 flex gap-8">
+                <div className="grid-cols-3 flex gap-8">
                     <div className="grid gap-3">
                         <Field className="flex">
                             <FieldLabel htmlFor="start-time-picker">Start Time</FieldLabel>
@@ -94,6 +106,14 @@ export default function AddTimetableBlock() {
                             className="pr-4 bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
                             />
                         </Field>
+                        <div id="start_time_error" aria-live="polite" aria-atomic="true">
+                            {state.errors?.start_time &&
+                            state.errors.start_time.map((error: string) => (
+                                <p className="text-sm text-red-500" key={error}>
+                                    {error}
+                                </p>))
+                            }
+                        </div>
                     </div>
                     <div className="grid gap-3">
                         <Field className="flex">
@@ -107,10 +127,19 @@ export default function AddTimetableBlock() {
                             className="pr-4 bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
                             />
                         </Field>
+                        
                         {/* <Field className="hidden">
                             <Input id="timetable_set_id" readOnly/>{timetable_set_id}
                         </Field> */}
                     </div> 
+                    <div className="grid pt-5 items-center" id="end_time_error" aria-live="polite" aria-atomic="true">
+                        {state.errors?.end_time &&
+                        state.errors.end_time.map((error: string) => (
+                            <p className="text-sm text-red-500" key={error}>
+                                {error}
+                            </p>))
+                        }
+                    </div>
                 </div>
             </div>
             <div className="flex flex-row py-4 gap-4">

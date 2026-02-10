@@ -52,42 +52,56 @@ export async function createNewTimetableSet(prevState: any, formData: FormData) 
     redirect("/dashboard/timetable");
 }
 
-const TimetableBlockSchema = z.object({
+export type BlockState = {
+    errors?: {
+        timetable_set_id?: string[];
+        day?: string[];
+        subject?: string[];
+        location?: string[];
+        start_time?: string[];
+        end_time?: string[];
+    };
+    message?: string | null;
+};
+
+const originalTimetableBlockSchema = z.object({
     id: z.string(),
     timetable_set_id: z.string(),
-    day: z.number().int(),
+    day: z.coerce
+    .number({error: "Choose a day"})
+    .int()
+    .min(1, "Choose a day")
+    .max(7, "Choose a valid day"),
     subject: z.string().min(1, "Subject is required"),
     location: z.string().min(1, "Location is required"),
     start_time: z.string().min(1, "Start time is required"),
     end_time: z.string().min(1, "End time is required"),
 });
-// }).refine((data) => {
-//     const startTimeDate = new Date(`1970-01-01T${data.start_time}:00`);
-//     const endTimeDate = new Date(`1970-01-01T${data.end_time}:00`);
 
-//     return endTimeDate > startTimeDate;
-// }, {
-//     message: "End time must be after start time",
-//     path: ["end_time"],
-// });
 
-const createTimetableBlock = TimetableBlockSchema.omit({ id: true });
+const createTimetableBlock = originalTimetableBlockSchema
+    .omit({ id: true })
+    .refine((data) => {
+    const startTimeDate = new Date(`1970-01-01T${data.start_time}:00`);
+    const endTimeDate = new Date(`1970-01-01T${data.end_time}:00`);
 
-export async function addTimetableBlock( prevState: any, formData: FormData) {
+    return endTimeDate > startTimeDate;
+}, {
+    message: "End time must be after start time",
+    path: ["end_time"],
+});
+
+
+export async function addTimetableBlock( prevState: BlockState, formData: FormData) {
     const set_id = await getTimetableSets(user_id);
-    if (!set_id || set_id.length === 0) {
-        console.warn("No timetable sets found for user", user_id);
-        return null; // or empty state
-    }
     const validatedFields = createTimetableBlock.safeParse({
         timetable_set_id: /*formData.get("timetable_set_id"),*/ set_id[0].id,
-        day: Number(formData.get("day_of_week")),
+        day: formData.get("day_of_week"),
         subject: formData.get("subject"),
         location: formData.get("location"),
         start_time: formData.get("start_time"),
         end_time: formData.get("end_time"),
     })
-    console.log("Validated Fields:", validatedFields);
     if (!validatedFields.success) {
         return {
             errors: validatedFields.error.flatten().fieldErrors,
