@@ -17,7 +17,7 @@ import { useState, useActionState } from "react";
 
 export default function AddTimetableBlock() {
     const initialState: BlockState = { message: null, errors: {} };
-    const [state, formAction] = useActionState(addTimetableBlock, initialState); // TODO - sort out state could be null issue
+    const [state, formAction] = useActionState(addTimetableBlock, initialState); 
 
     const dow = [
     { label: "Monday", value: 1 },
@@ -59,7 +59,6 @@ export default function AddTimetableBlock() {
                         </SelectContent>
                     </Select>
 
-                    {/* TODO - Sort out why this isn't working*/}
                     <div id="day_error" aria-live="polite" aria-atomic="true">
                         {state.errors?.day &&
                         state.errors.day.map((error: string) => (
