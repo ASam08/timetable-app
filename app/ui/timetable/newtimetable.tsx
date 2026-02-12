@@ -38,6 +38,10 @@ export function TimetableGrid({ events = [], }: { events?: RetreivedTimetableBlo
     router.refresh();
   }
 
+  const now = new Date();
+  const jsDay = now.getDay();
+  const dayOfWeek = jsDay === 0 ? 7 : jsDay;
+
   useEffect(() => {
     const onResize = () => setWidth(window.innerWidth);
     onResize();
@@ -70,7 +74,7 @@ export function TimetableGrid({ events = [], }: { events?: RetreivedTimetableBlo
       
       <div className="max-h-100 xl:max-h-175 overflow-auto border border-slate-700">
         <div
-          className="grid grid-cols-[60px_repeat(7,1fr)] min-w-[700px]"
+          className="grid grid-cols-[60px_repeat(7,1fr)] min-w-175"
           style={{
             gridTemplateRows: `40px repeat(${virtualRows}, 8px)`,
           }}
@@ -83,8 +87,9 @@ export function TimetableGrid({ events = [], }: { events?: RetreivedTimetableBlo
                 sticky top-0 z-12
                 flex items-center justify-center
                 border border-slate-700
-                bg-slate-800 text-white font-semibold text-sm
-                ${i==0 ? "z-13 left-0":""}
+              text-white font-semibold text-sm
+                ${i == 0 ? "z-13 left-0 bg-slate-800" : ""}
+                ${i == dayOfWeek ? "bg-blue-800": "bg-slate-800"}
             `}
               style={{ gridColumn: i + 1, gridRow: 1 }}
             >
@@ -127,12 +132,13 @@ export function TimetableGrid({ events = [], }: { events?: RetreivedTimetableBlo
             return (
               <div
                 key={e.id}
-                className="
-                  rounded-lg border-blue-800 border bg-blue-600 text-white text-xs
+                className={`
+                  rounded-lg dark:border-blue-900 border-blue-100 border text-white text-xs
                   px-1 py-0.5 m-[1px]
                   overflow-hidden
                   flex flex-col h-full
-                "
+                  ${(e.day_of_week) == dayOfWeek ? "bg-blue-600" : "bg-blue-800"}
+                `}
                 style={{
                   gridColumn: +e.day_of_week + 1,
                   gridRow: `${start + 2} / ${end + 2}`,
