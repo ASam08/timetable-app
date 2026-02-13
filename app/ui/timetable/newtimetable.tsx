@@ -72,7 +72,7 @@ export function TimetableGrid({ events = [], }: { events?: RetreivedTimetableBlo
         </div>
       </div>
       
-      <div className="max-h-100 xl:max-h-175 overflow-auto border border-slate-700">
+      <div className="max-h-100 xl:max-h-175 overflow-auto border dark:border-slate-700 border-slate-400">
         <div
           className="grid grid-cols-[60px_repeat(7,1fr)] min-w-175"
           style={{
@@ -86,10 +86,10 @@ export function TimetableGrid({ events = [], }: { events?: RetreivedTimetableBlo
               className={`
                 sticky top-0 z-12
                 flex items-center justify-center
-                border border-slate-700
-              text-white font-semibold text-sm
-                ${i == 0 ? "z-13 left-0 bg-slate-800" : ""}
-                ${i == dayOfWeek ? "bg-blue-800": "bg-slate-800"}
+                border dark:border-slate-700 border-slate-400
+              text-black dark:text-white font-semibold text-sm
+                ${i == 0 ? "z-13 left-0 dark:bg-slate-800 bg-slate-300" : ""}
+                ${i == dayOfWeek ? "bg-blue-800 text-white": "dark:bg-slate-800 bg-slate-300"}
             `}
               style={{ gridColumn: i + 1, gridRow: 1 }}
             >
@@ -108,10 +108,10 @@ export function TimetableGrid({ events = [], }: { events?: RetreivedTimetableBlo
               <div
                 key={`t-${i}`}
                 className={`
-                  sticky left-0 z-10 bg-slate-900 h-3 w-full flex items-center justify-end
-                  text-xs text-slate-400 pr-1 text-right
-                  ${showLabel ? "border-t overflow-visible z-11 h-3 border-slate-700" : ""}
-                  border-r border-l border-slate-700
+                  sticky left-0 z-10 bg-slate-200 dark:bg-slate-900 h-3 w-full flex items-center justify-end
+                  text-xs dark:text-slate-300 text-slate-700 pr-1 text-right
+                  ${showLabel ? "border-t overflow-visible z-11 h-3 dark:border-slate-700 border-slate-300" : ""}
+                  border-r border-l dark:border-slate-700 border-slate-300
                 `}
                 style={{ gridColumn: 1, gridRow: i + 2 }}
               >
