@@ -4,9 +4,9 @@ import { redirect } from "next/navigation";
 
 export default async function addBlockPage() {
     const user_id = await getUserID();
-    const set_id = user_id ? await getTimetableSets(user_id) : null;
+    const sets = user_id ? await getTimetableSets(user_id) : null;
 
-    if (!set_id) {
+    if (!Array.isArray(sets) || sets.length === 0 || !user_id) {
         redirect("/dashboard/timetable");
     }
     
