@@ -99,15 +99,22 @@ export async function getNextBreak(
   time: string
 ): Promise<RetreivedTimetableBlocks | null> {
   const result = await sql <RetreivedTimetableBlocks[]>`
-    SELECT t1.subject, t1.start_time, t1.end_time, t2.subject, t2.start_time, t2.end_time 
+    SELECT 
+      t1.subject AS subject,
+      t1.start_time AS start_time,
+      t1.end_time AS end_time,
+      t2.subject AS next_subject,
+      t2.start_time AS next_start_time,
+      t2.end_time AS next_end_time 
     FROM timetable_blocks AS t1 
     LEFT JOIN timetable_blocks AS t2 
     ON t1.end_time = t2.start_time 
       AND t1.day_of_week = t2.day_of_week
-    WHERE timetable_set_id = ${timetable_set_id}
+    WHERE t1.timetable_set_id = ${timetable_set_id}
       AND t1.day_of_week = ${dayOfWeek} 
       AND t2.id IS NULL 
-      AND t1.start_time > ${time}::time
+      AND t1.start_time <= ${time}::time
+      AND t1.end_time > ${time}::time
     ORDER BY t1.start_time
     LIMIT 1
     `;

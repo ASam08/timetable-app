@@ -2,6 +2,7 @@ import LocalDateDisplay from "@/components/ui/dashboard/localdate";
 import LocalTimeDisplay from "@/components/ui/dashboard/localtime";
 import CurrentCardClient from "@/app/ui/dashboard/currentcardclient";
 import NextCardClient from "../ui/dashboard/nextcardclient";
+import NextBreakCardClient from "../ui/dashboard/nextbreakcardclient";
 
 export default function DashboardPage() {
     
@@ -17,6 +18,7 @@ export default function DashboardPage() {
             </div>
             <div className="mt-4 flex flex-col md:flex-row gap-2 md:gap-4">
                 <CurrentCardClient />
+                <NextBreakCardClient />
                 <NextCardClient />
             </div>
         </div>
