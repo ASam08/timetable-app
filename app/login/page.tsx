@@ -1,11 +1,21 @@
+import { GalleryVerticalEnd } from "lucide-react";
+import { Suspense } from "react";
+import { LoginForm } from "@/components/ui/login/login-form";
+
 export default function LoginPage() {
-    return (
-        <div className="bg-stone-300 dark:bg-gray-950 min-h-screen flex items-center justify-center">
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg w-96">
-                <h2 className="text-2xl font-semibold mb-6 text-center text-gray-800 dark:text-gray-200">
-                    Login to Your Account
-                </h2> 
-            </div>
-        </div>
-    );
+  return (
+    <div className="bg-muted flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
+      <div className="flex w-full max-w-sm flex-col gap-6">
+        <a href="#" className="flex items-center gap-2 self-center font-medium">
+          <div className="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md">
+            <GalleryVerticalEnd className="size-4" />
+          </div>
+          Timetable App
+        </a>
+        <Suspense>
+          <LoginForm />
+        </Suspense>
+      </div>
+    </div>
+  );
 }
