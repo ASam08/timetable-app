@@ -1,3 +1,5 @@
+"use client";
+
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,11 +17,21 @@ import {
   FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { useActionState } from "react";
+import { authenticate } from "@/lib/actions";
+import { useSearchParams } from "next/navigation";
+import { CircleAlert } from "lucide-react";
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  const [errorMessage, formAction, isPending] = useActionState(
+    authenticate,
+    undefined,
+  );
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
@@ -30,7 +42,7 @@ export function LoginForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form>
+          <form action={formAction}>
             <FieldGroup>
               <Field>
                 {/* TODO: Implement social provider auth */}
@@ -72,7 +84,22 @@ export function LoginForm({
                 <Input id="password" type="password" required />
               </Field>
               <Field>
-                <Button type="submit">Login</Button>
+                <input type="hidden" name="redirectTo" value={callbackUrl} />
+                <Button type="submit" aria-disabled={isPending}>
+                  Login
+                </Button>
+                <div
+                  className="flex h-8 items-end space-x-1"
+                  aria-live="polite"
+                  aria-atomic="true"
+                >
+                  {errorMessage && (
+                    <>
+                      <CircleAlert className="h-5 w-5 text-red-500" />
+                      <p className="text-sm text-red-500">{errorMessage}</p>
+                    </>
+                  )}
+                </div>
                 <FieldDescription className="text-center">
                   Don't have an account? <a href="#">Sign up</a>{" "}
                   {/* TODO: add sign-up form */}
