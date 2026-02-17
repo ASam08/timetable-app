@@ -1,12 +1,11 @@
 import {
   LucideGrid,
   LucideHome,
-  LucidePowerOff,
+  LucideLogOut,
   LucideSettings,
 } from "lucide-react";
 import Link from "next/link";
 import { signOut } from "@/auth";
-import { Button } from "@base-ui/react";
 
 export default function SideNav() {
   return (
@@ -40,7 +39,7 @@ export default function SideNav() {
         }}
       >
         <button className="mb-4 flex flex-row rounded-xl border-2 border-stone-500 bg-stone-400 p-2 font-semibold text-blue-600 xl:text-xl dark:border-gray-700 dark:bg-gray-800 dark:text-blue-400">
-          <LucidePowerOff />
+          <LucideLogOut />
           <span className="hidden md:flex md:pl-2">Sign Out</span>
         </button>
       </form>

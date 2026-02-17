@@ -13,6 +13,7 @@ import {
 import { sqlConn } from "@/lib/db";
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
+import bcrypt from "bcryptjs";
 
 const sql = sqlConn;
 const user_id = (await getUserID()) ?? crypto.randomUUID();

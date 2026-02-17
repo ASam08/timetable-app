@@ -3,7 +3,7 @@
 import { RetreivedTimetableBlocks } from "@/lib/definitions";
 import { sqlConn } from "@/lib/db";
 
-const sql = sqlConn
+const sql = sqlConn;
 
 export async function testConnection() {
   try {
@@ -16,7 +16,7 @@ export async function testConnection() {
 }
 
 export async function getUserID() {
-  if (process.env.AUTH === "true") return null; //TODO: When auth implemented, return the userID here
+  if (process.env.AUTH_ON === "true") return null; //TODO: When auth implemented, return the userID here
   try {
     const result = await sql<{ id: string }[]>`
       SELECT DISTINCT owner_id AS id FROM timetable_sets
@@ -29,9 +29,9 @@ export async function getUserID() {
   }
 }
 
-export async function getTimetableSets(user_id:string) {
+export async function getTimetableSets(user_id: string) {
   try {
-    const result = await sql < { id: string }[]>`
+    const result = await sql<{ id: string }[]>`
       SELECT id FROM timetable_sets
       WHERE owner_id = ${user_id}
       LIMIT 1
@@ -44,7 +44,7 @@ export async function getTimetableSets(user_id:string) {
   }
 }
 
-export async function getTimetableBlocks(timetable_set_id:string) {
+export async function getTimetableBlocks(timetable_set_id: string) {
   try {
     const blocks = await sql<RetreivedTimetableBlocks[]>`
     SELECT id, start_time, end_time, day_of_week, subject, location FROM timetable_blocks
@@ -60,7 +60,7 @@ export async function getTimetableBlocks(timetable_set_id:string) {
 export async function getCurrentBlock(
   timetable_set_id: string,
   dayOfWeek: number,
-  time: string
+  time: string,
 ): Promise<RetreivedTimetableBlocks | null> {
   const result = await sql<RetreivedTimetableBlocks[]>`
     SELECT id, start_time, end_time, day_of_week, subject, location
@@ -78,7 +78,7 @@ export async function getCurrentBlock(
 export async function getNextBlock(
   timetable_set_id: string,
   dayOfWeek: number,
-  time: string
+  time: string,
 ): Promise<RetreivedTimetableBlocks | null> {
   const result = await sql<RetreivedTimetableBlocks[]>`
     SELECT id, start_time, end_time, day_of_week, subject, location
@@ -96,9 +96,9 @@ export async function getNextBlock(
 export async function getNextBreak(
   timetable_set_id: string,
   dayOfWeek: number,
-  time: string
+  time: string,
 ): Promise<RetreivedTimetableBlocks | null> {
-  const result = await sql <RetreivedTimetableBlocks[]>`
+  const result = await sql<RetreivedTimetableBlocks[]>`
     SELECT 
       t1.subject AS subject,
       t1.start_time AS start_time,
@@ -118,6 +118,6 @@ export async function getNextBreak(
     ORDER BY t1.start_time
     LIMIT 1
     `;
-  
+
   return result[0] ?? null;
 }
