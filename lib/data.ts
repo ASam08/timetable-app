@@ -2,6 +2,7 @@
 
 import { RetreivedTimetableBlocks } from "@/lib/definitions";
 import { sqlConn } from "@/lib/db";
+import { auth } from "@/auth";
 
 const sql = sqlConn;
 
@@ -16,7 +17,12 @@ export async function testConnection() {
 }
 
 export async function getUserID() {
-  if (process.env.AUTH_ON === "true") return null; //TODO: When auth implemented, return the userID here
+  if (process.env.AUTH_ON === "true") {
+    const session = await auth();
+    const user_id = session?.user?.id;
+    if (!user_id) return null;
+    return user_id;
+  }
   try {
     const result = await sql<{ id: string }[]>`
       SELECT DISTINCT owner_id AS id FROM timetable_sets

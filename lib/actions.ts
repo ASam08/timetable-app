@@ -16,7 +16,6 @@ import { AuthError } from "next-auth";
 import bcrypt from "bcryptjs";
 
 const sql = sqlConn;
-const user_id = (await getUserID()) ?? crypto.randomUUID();
 
 export async function authenticate(
   prevState: string | undefined,
@@ -50,6 +49,7 @@ export async function createNewTimetableSet(
   prevState: any,
   formData: FormData,
 ) {
+  const user_id = await getUserID();
   const validatedFields = createTimetableSet.safeParse({
     owner_id: user_id,
     title: formData.get("title"),
@@ -128,6 +128,12 @@ export async function addTimetableBlock(
   prevState: BlockState,
   formData: FormData,
 ) {
+  const user_id = await getUserID();
+  if (!user_id) {
+    return {
+      message: "User not authenticated. Please log in.",
+    };
+  }
   const set_id = await getTimetableSets(user_id);
   const validatedFields = createTimetableBlock.safeParse({
     timetable_set_id: /*formData.get("timetable_set_id"),*/ set_id[0].id,
@@ -166,11 +172,12 @@ export async function addTimetableBlock(
   redirect("/dashboard/timetable");
 }
 
-export async function fetchCurrentBlock(
-  user_id: string,
-  dayOfWeek: number,
-  time: string,
-) {
+export async function fetchCurrentBlock(dayOfWeek: number, time: string) {
+  const user_id = await getUserID();
+  if (!user_id) {
+    console.error("No user found.");
+    return null;
+  }
   const sets = await getTimetableSets(user_id);
 
   // Defensive guard
@@ -184,11 +191,12 @@ export async function fetchCurrentBlock(
   return getCurrentBlock(timetableSetId, dayOfWeek, time);
 }
 
-export async function fetchNextBlock(
-  user_id: string,
-  dayOfWeek: number,
-  time: string,
-) {
+export async function fetchNextBlock(dayOfWeek: number, time: string) {
+  const user_id = await getUserID();
+  if (!user_id) {
+    console.error("No user found.");
+    return null;
+  }
   const sets = await getTimetableSets(user_id);
 
   // Defensive guard
@@ -202,11 +210,12 @@ export async function fetchNextBlock(
   return getNextBlock(timetableSetId, dayOfWeek, time);
 }
 
-export async function fetchNextBreak(
-  user_id: string,
-  dayOfWeek: number,
-  time: string,
-) {
+export async function fetchNextBreak(dayOfWeek: number, time: string) {
+  const user_id = await getUserID();
+  if (!user_id) {
+    console.error("No user found.");
+    return null;
+  }
   const sets = await getTimetableSets(user_id);
 
   // Defensive guard

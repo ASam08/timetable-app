@@ -10,6 +10,11 @@ async function addNewUser() {
 
   const hashedPassword = await bcrypt.hash(password!, 10);
 
+  if (!email || !password) {
+    console.error("Email or password not set in environment variables.");
+    return;
+  }
+
   try {
     await sql`
       INSERT INTO users (name, email, password)

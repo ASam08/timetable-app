@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { fetchNextBreak } from "@/lib/actions";
 import { RetreivedTimetableBlocks } from "@/lib/definitions";
-import { getUserID } from "@/lib/data";
 
 function timeToMinutes(time?: string | null): number | null {
   if (!time) return null;
@@ -19,19 +18,18 @@ export default function NextBreakCardClient() {
   const [foundUserId, setFoundUserId] = useState(true);
 
   const fetchNextBreakTask = async () => {
-    const user_id = await getUserID();
-
-    if (!user_id) {
-      setFoundUserId(false);
-      return;
-    }
-
     const now = new Date();
     const jsDay = now.getDay();
     const dayOfWeek = jsDay === 0 ? 7 : jsDay;
     const time = now.toTimeString().slice(0, 8);
 
-    const next = await fetchNextBreak(user_id, dayOfWeek, time);
+    const next = await fetchNextBreak(dayOfWeek, time);
+    // TODO: this needs to only set founduserid to false if there is no user found vs there not being a next break today
+    if (!next) {
+      setFoundUserId(false);
+      setLoading(false);
+      return;
+    }
     setBlock(next);
 
     if (next?.start_time) {
@@ -85,7 +83,7 @@ export default function NextBreakCardClient() {
 
   if (loading) {
     return (
-      <div className="w-full md:w-1/3 max-w-64 p-4 border-2 border-dashed rounded-lg animate-pulse">
+      <div className="w-full max-w-64 animate-pulse rounded-lg border-2 border-dashed p-4 md:w-1/3">
         <p className="text-gray-400">Loading…</p>
       </div>
     );
@@ -93,28 +91,26 @@ export default function NextBreakCardClient() {
 
   if (!block) {
     return (
-      <div className="w-full md:w-1/3 max-w-64 p-4 border-2 border-dashed rounded-lg">
-        <p className="text-gray-400">
-          Looks like you're already on break!
-        </p>
+      <div className="w-full max-w-64 rounded-lg border-2 border-dashed p-4 md:w-1/3">
+        <p className="text-gray-400">Looks like you're already on break!</p>
       </div>
     );
   }
 
   return (
-    <div className="w-full md:w-1/3 max-w-64 p-4 border-2 rounded-lg">
-        <p className="font-bold">Next Break</p>
-        <p className="text-sm">
+    <div className="w-full max-w-64 rounded-lg border-2 p-4 md:w-1/3">
+      <p className="font-bold">Next Break</p>
+      <p className="text-sm">
         {minutesUntilNext === -1 && "Starting now "}
         {minutesUntilNext === 0 && "Starting in less than 1 minute "}
         {minutesUntilNext === 1 && "Starting in 1 minute "}
-        {hours === null && minutesUntilNext! > 1 &&
+        {hours === null &&
+          minutesUntilNext! > 1 &&
           `Starting in ${minutesUntilNext} minutes `}
         {hours !== null &&
           `Starting in ${hours} hour${hours > 1 ? "s" : ""} and ${mins} minute${mins === 1 ? "" : "s"} `}
-        at {block.end_time.slice(0,5)}
+        at {block.end_time.slice(0, 5)}
       </p>
-
     </div>
   );
 }

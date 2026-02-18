@@ -33,12 +33,30 @@ export const { auth, signIn, signOut } = NextAuth({
           if (!user) return null;
           const passwordsMatch = await bcrypt.compare(password, user.password);
 
-          if (passwordsMatch) return user;
-        }
-
-        console.log("Invalid credentials");
-        return null;
+          if (!passwordsMatch) {
+            console.log("Invalid credentials");
+            return null;
+          }
+          return {
+            id: user.id,
+            name: user.name ?? null,
+            email: user.email,
+          };
+        } else return null;
       },
     }),
   ],
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) token.id = user.id;
+      return token;
+    },
+
+    async session({ session, token }) {
+      if (session.user && token.id) {
+        session.user.id = token.id as string;
+      }
+      return session;
+    },
+  },
 });
