@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { fetchNextBreak } from "@/lib/actions";
 import { RetreivedTimetableBlocks } from "@/lib/definitions";
+import { LucidePause } from "lucide-react";
 
 function timeToMinutes(time?: string | null): number | null {
   if (!time) return null;
@@ -24,16 +25,32 @@ export default function NextBreakCardClient() {
     const time = now.toTimeString().slice(0, 8);
 
     const next = await fetchNextBreak(dayOfWeek, time);
-    // TODO: this needs to only set founduserid to false if there is no user found vs there not being a next break today
-    if (!next) {
+    // Distinguish the "no user" sentinel from a valid response of "no next break"
+    if (
+      next &&
+      ((next as any).reason === "no-user" || (next as any).reason === "no-set")
+    ) {
       setFoundUserId(false);
       setLoading(false);
       return;
     }
-    setBlock(next);
 
-    if (next?.start_time) {
-      setStartMinutes(timeToMinutes(next.end_time));
+    // No next break today
+    if (!next) {
+      setBlock(null);
+      setStartMinutes(null);
+      setMinutesUntilNext(null);
+      setLoading(false);
+      return;
+    }
+
+    // At this point `next` is a valid block
+    setBlock(next as RetreivedTimetableBlocks);
+
+    if ((next as RetreivedTimetableBlocks).start_time) {
+      setStartMinutes(
+        timeToMinutes((next as RetreivedTimetableBlocks).end_time),
+      );
     } else {
       setStartMinutes(null);
       setMinutesUntilNext(null);
@@ -84,6 +101,7 @@ export default function NextBreakCardClient() {
   if (loading) {
     return (
       <div className="w-full max-w-64 animate-pulse rounded-lg border-2 border-dashed p-4 md:w-1/3">
+        <LucidePause className="float-right text-yellow-500" />
         <p className="text-gray-400">Loading…</p>
       </div>
     );
@@ -92,6 +110,7 @@ export default function NextBreakCardClient() {
   if (!block) {
     return (
       <div className="w-full max-w-64 rounded-lg border-2 border-dashed p-4 md:w-1/3">
+        <LucidePause className="float-right text-yellow-500" />
         <p className="text-gray-400">Looks like you're already on break!</p>
       </div>
     );
@@ -99,6 +118,7 @@ export default function NextBreakCardClient() {
 
   return (
     <div className="w-full max-w-64 rounded-lg border-2 p-4 md:w-1/3">
+      <LucidePause className="float-right text-yellow-500" />
       <p className="font-bold">Next Break</p>
       <p className="text-sm">
         {minutesUntilNext === -1 && "Starting now "}

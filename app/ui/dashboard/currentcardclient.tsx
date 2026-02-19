@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { fetchCurrentBlock } from "@/lib/actions";
 import { RetreivedTimetableBlocks } from "@/lib/definitions";
+import { LucidePlay } from "lucide-react";
 
 function timeToMinutes(time?: string | null): number | null {
   if (!time) return null;
@@ -23,16 +24,31 @@ export default function CurrentCardClient() {
     const time = now.toTimeString().slice(0, 8);
 
     const current = await fetchCurrentBlock(dayOfWeek, time);
-    // TODO: this needs to only set founduserid to false if there is no user found vs there not being a current block
-    if (!current) {
+    // Distinguish the "no user" sentinel from a valid response of "no current block"
+    if (
+      current &&
+      ((current as any).reason === "no-user" ||
+        (current as any).reason === "no-set")
+    ) {
       setFoundUserId(false);
       setLoading(false);
       return;
     }
-    setBlock(current);
 
-    if (current?.end_time) {
-      setEndMinutes(timeToMinutes(current.end_time));
+    // No current block
+    if (!current) {
+      setBlock(null);
+      setEndMinutes(null);
+      setLoading(false);
+      return;
+    }
+
+    setBlock(current as RetreivedTimetableBlocks);
+
+    if ((current as RetreivedTimetableBlocks).end_time) {
+      setEndMinutes(
+        timeToMinutes((current as RetreivedTimetableBlocks).end_time),
+      );
     } else {
       setEndMinutes(null);
     }
@@ -76,6 +92,7 @@ export default function CurrentCardClient() {
   if (loading) {
     return (
       <div className="w-full max-w-64 animate-pulse rounded-lg border-2 border-dashed p-4 md:w-1/3">
+        <LucidePlay className="float-right text-green-600" />
         <p className="text-gray-400">Loading…</p>
       </div>
     );
@@ -84,6 +101,7 @@ export default function CurrentCardClient() {
   if (!block) {
     return (
       <div className="w-full max-w-64 rounded-lg border-2 border-dashed p-4 md:w-1/3">
+        <LucidePlay className="float-right text-green-600" />
         <p className="text-gray-400">Nowhere to be right now!</p>
       </div>
     );
@@ -91,6 +109,7 @@ export default function CurrentCardClient() {
 
   return (
     <div className="w-full max-w-64 rounded-lg border-2 p-4 md:w-1/3">
+      <LucidePlay className="float-right text-green-600" />
       <p className="text-sm text-gray-400">Current</p>
       <p className="font-bold">{block.subject}</p>
       <p className="text-sm">{block.location}</p>

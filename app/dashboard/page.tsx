@@ -17,7 +17,8 @@ export default async function DashboardPage() {
       <div className="flex flex-row">
         <div className="self-start-safe flex grow text-gray-600 dark:text-gray-400">
           {" "}
-          {session?.user.name}, welcome to your dashboard!
+          {session?.user.name ? `${session.user.name}, h` : "H"}ere's what's
+          next on your schedule!
         </div>
         <div className="flex grow flex-col items-end-safe self-end-safe">
           <div className="flex grow text-right">

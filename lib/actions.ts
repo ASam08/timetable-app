@@ -176,14 +176,14 @@ export async function fetchCurrentBlock(dayOfWeek: number, time: string) {
   const user_id = await getUserID();
   if (!user_id) {
     console.error("No user found.");
-    return null;
+    return { reason: "no-user" } as const;
   }
   const sets = await getTimetableSets(user_id);
 
   // Defensive guard
   if (!Array.isArray(sets) || sets.length === 0) {
     console.warn("No timetable sets found for user:", user_id);
-    return null;
+    return { reason: "no-set" } as const;
   }
 
   const timetableSetId = sets[0].id;
@@ -195,14 +195,14 @@ export async function fetchNextBlock(dayOfWeek: number, time: string) {
   const user_id = await getUserID();
   if (!user_id) {
     console.error("No user found.");
-    return null;
+    return { reason: "no-user" } as const;
   }
   const sets = await getTimetableSets(user_id);
 
   // Defensive guard
   if (!Array.isArray(sets) || sets.length === 0) {
     console.warn("No timetable sets found for user:", user_id);
-    return null;
+    return { reason: "no-set" } as const;
   }
 
   const timetableSetId = sets[0].id;
@@ -213,15 +213,16 @@ export async function fetchNextBlock(dayOfWeek: number, time: string) {
 export async function fetchNextBreak(dayOfWeek: number, time: string) {
   const user_id = await getUserID();
   if (!user_id) {
+    // Explicit sentinel so callers can distinguish "no user" from "no next break"
     console.error("No user found.");
-    return null;
+    return { reason: "no-user" } as const;
   }
   const sets = await getTimetableSets(user_id);
 
   // Defensive guard
   if (!Array.isArray(sets) || sets.length === 0) {
     console.warn("No timetable sets found for user:", user_id);
-    return null;
+    return { reason: "no-set" } as const;
   }
 
   const timetableSetId = sets[0].id;

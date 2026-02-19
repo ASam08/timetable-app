@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { fetchNextBlock } from "@/lib/actions";
 import { RetreivedTimetableBlocks } from "@/lib/definitions";
+import { LucideSkipForward } from "lucide-react";
 
 function timeToMinutes(time?: string | null): number | null {
   if (!time) return null;
@@ -24,16 +25,31 @@ export default function NextCardClient() {
     const time = now.toTimeString().slice(0, 8);
 
     const next = await fetchNextBlock(dayOfWeek, time);
-    // TODO: this needs to only set founduserid to false if there is no user found vs there not being a next block today
-    if (!next) {
+    // Distinguish the "no user" sentinel from a valid response of "no next block"
+    if (
+      next &&
+      ((next as any).reason === "no-user" || (next as any).reason === "no-set")
+    ) {
       setFoundUserId(false);
       setLoading(false);
       return;
     }
-    setBlock(next);
 
-    if (next?.start_time) {
-      setStartMinutes(timeToMinutes(next.start_time));
+    // No next block today
+    if (!next) {
+      setBlock(null);
+      setStartMinutes(null);
+      setMinutesUntilNext(null);
+      setLoading(false);
+      return;
+    }
+
+    setBlock(next as RetreivedTimetableBlocks);
+
+    if ((next as RetreivedTimetableBlocks).start_time) {
+      setStartMinutes(
+        timeToMinutes((next as RetreivedTimetableBlocks).start_time),
+      );
     } else {
       setStartMinutes(null);
       setMinutesUntilNext(null);
@@ -84,6 +100,7 @@ export default function NextCardClient() {
   if (loading) {
     return (
       <div className="w-full max-w-64 animate-pulse rounded-lg border-2 border-dashed p-4 md:w-1/3">
+        <LucideSkipForward className="float-right text-blue-600" />
         <p className="text-gray-400">Loading…</p>
       </div>
     );
@@ -92,6 +109,7 @@ export default function NextCardClient() {
   if (!block) {
     return (
       <div className="w-full max-w-64 rounded-lg border-2 border-dashed p-4 md:w-1/3">
+        <LucideSkipForward className="float-right text-blue-600" />
         <p className="text-gray-400">
           Looks like you're free for the rest of the day!
         </p>
@@ -101,6 +119,7 @@ export default function NextCardClient() {
 
   return (
     <div className="w-full max-w-64 rounded-lg border-2 p-4 md:w-1/3">
+      <LucideSkipForward className="float-right text-blue-600" />
       <p className="text-sm text-gray-400">
         {minutesUntilNext === -1 && "Starting now"}
         {minutesUntilNext === 0 && "Starting in less than 1 minute"}
