@@ -21,6 +21,7 @@ import { useActionState } from "react";
 import { authenticate } from "@/lib/actions";
 import { useSearchParams } from "next/navigation";
 import { CircleAlert } from "lucide-react";
+import Link from "next/link";
 
 export function LoginForm({
   className,
@@ -102,7 +103,7 @@ export function LoginForm({
                   )}
                 </div>
                 <FieldDescription className="text-center">
-                  Don't have an account? <a href="#">Sign up</a>{" "}
+                  Don't have an account? <Link href="/signup">Sign up</Link>{" "}
                   {/* TODO: add sign-up form */}
                 </FieldDescription>
               </Field>
