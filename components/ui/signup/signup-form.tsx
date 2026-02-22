@@ -18,14 +18,15 @@ import {
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { useActionState } from "react";
-import { signup } from "@/lib/signup";
+import { signup } from "@/lib/actions";
+import { useFormStatus } from "react-dom";
 
 export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  const [state, action, pending] = useActionState(signup, undefined);
-
+  const [state, action] = useActionState(signup, undefined);
+  const { pending } = useFormStatus();
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
@@ -47,7 +48,9 @@ export function SignupForm({
                   placeholder="John Doe"
                   required
                 />
-                {state?.errors?.name && <p>{state.errors.name}</p>}
+                {state?.errors?.name?.map((error) => (
+                  <p key={error}>{error}</p>
+                ))}
               </Field>
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
@@ -58,7 +61,9 @@ export function SignupForm({
                   placeholder="m@example.com"
                   required
                 />
-                {state?.errors?.email && <p>{state.errors.email}</p>}
+                {state?.errors?.email?.map((error) => (
+                  <p key={error}>{error}</p>
+                ))}
               </Field>
               <Field>
                 <Field className="grid grid-cols-2 gap-4">

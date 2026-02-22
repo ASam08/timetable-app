@@ -14,6 +14,7 @@ import { sqlConn } from "@/lib/db";
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
 import bcrypt from "bcryptjs";
+import { SignupFormSchema, SignupFormState } from "./signupschema";
 
 const sql = sqlConn;
 
@@ -34,6 +35,38 @@ export async function authenticate(
     }
     throw error;
   }
+}
+
+export async function signup(
+  state: SignupFormState,
+  formData: FormData,
+): Promise<SignupFormState> {
+  const validatedFields = SignupFormSchema.safeParse({
+    name: formData.get("name"),
+    email: formData.get("email"),
+    password: formData.get("password"),
+    confirmPassword: formData.get("confirm-password"),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+
+  const { name, email, password } = validatedFields.data;
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  try {
+    await sql`
+      INSERT INTO users (name, email, password, account_enabled)
+      VALUES (${name}, ${email}, ${hashedPassword}, false)
+    `;
+  } catch {
+    return { message: "Failed to create account." };
+  }
+
+  return { message: "Account created successfully" };
 }
 
 const TimetableSetSchema = z.object({
