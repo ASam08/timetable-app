@@ -4,8 +4,9 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ModeToggle } from "./ui/darkmode";
 import { Inter } from "next/font/google";
+import { Toaster } from "@/components/ui/sonner";
 
-const inter = Inter({subsets:['latin'],variable:'--font-sans'});
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
   title: "Timetable App",
@@ -19,22 +20,24 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className={inter.variable}>
-      <body className={`${geistSans.className} ${geistMono.className} antialiased`}>
-      <ThemeProvider
-        attribute="class"
-        defaultTheme="system"
-        enableSystem
-        disableTransitionOnChange
+      <body
+        className={`${geistSans.className} ${geistMono.className} antialiased`}
       >
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
           {children}
-          
-        <div className="flex">
-          <div className="justify-start fixed top-2 left-2 md:top-2"></div>
-          <div className="justify-end fixed top-2 right-2 md:top-4 md:right-4">
-            <ModeToggle />
+          <Toaster />
+          <div className="flex">
+            <div className="fixed top-2 left-2 justify-start md:top-2"></div>
+            <div className="fixed top-2 right-2 justify-end md:top-4 md:right-4">
+              <ModeToggle />
+            </div>
           </div>
-        </div>
-      </ThemeProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

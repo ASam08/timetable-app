@@ -20,13 +20,40 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { signup } from "@/lib/actions";
 import { useFormStatus } from "react-dom";
+import { SignupFormState } from "@/lib/signupschema";
+import { useEffect } from "react";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+
+function SubmitButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button disabled={pending} type="submit">
+      {pending ? "Creating…" : "Create Account"}
+    </Button>
+  );
+}
 
 export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  const [state, action] = useActionState(signup, undefined);
+  const initialState = undefined satisfies SignupFormState;
+  const [state, action] = useActionState(signup, initialState);
   const { pending } = useFormStatus();
+
+  const router = useRouter();
+
+  useEffect(() => {
+    if (state?.message === "success") {
+      toast.success("Account created successfully!", {
+        position: "top-center",
+      });
+      router.push("/login");
+    }
+  }, [state, router]);
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
@@ -49,7 +76,9 @@ export function SignupForm({
                   required
                 />
                 {state?.errors?.name?.map((error) => (
-                  <p key={error}>{error}</p>
+                  <p className="text-red-500" key={error}>
+                    {error}
+                  </p>
                 ))}
               </Field>
               <Field>
@@ -62,7 +91,9 @@ export function SignupForm({
                   required
                 />
                 {state?.errors?.email?.map((error) => (
-                  <p key={error}>{error}</p>
+                  <p className="text-red-500" key={error}>
+                    {error}
+                  </p>
                 ))}
               </Field>
               <Field>
@@ -75,47 +106,42 @@ export function SignupForm({
                       name="password"
                       required
                     />
-                    {state?.errors?.password && (
-                      <div>
-                        <p>Password must:</p>
-                        <ul>
-                          {state.errors.password.map((error) => (
-                            <li key={error}>- {error}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
                   </Field>
                   <Field>
-                    <FieldLabel htmlFor="confirm-password">
+                    <FieldLabel htmlFor="confirmPpassword">
                       Confirm Password
                     </FieldLabel>
                     <Input
-                      id="confirm-password"
+                      id="confirmPassword"
                       type="password"
-                      name="confirm-password"
+                      name="confirmPassword"
                       required
                     />
-                    {state?.errors?.confirmPassword && (
-                      <div>
-                        <p>Password must:</p>
-                        <ul>
-                          {state.errors.confirmPassword.map((error) => (
-                            <li key={error}>- {error}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
                   </Field>
                 </Field>
+
+                {state?.errors?.password && (
+                  <div className="text-red-500">
+                    <p>Password must:</p>
+                    <ul>
+                      {state.errors.password.map((error) => (
+                        <li key={error}>- {error}</li>
+                      ))}
+                      {state?.errors?.confirmPassword?.map((error) => (
+                        <p className="text-red-500" key={error}>
+                          {error}
+                        </p>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
                 <FieldDescription>
                   Must be at least 8 characters long.
                 </FieldDescription>
               </Field>
               <Field>
-                <Button disabled={pending} type="submit">
-                  Create Account
-                </Button>
+                <SubmitButton />
                 <FieldDescription className="text-center">
                   Already have an account? <Link href="/login">Sign in</Link>
                 </FieldDescription>

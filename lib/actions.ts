@@ -45,7 +45,7 @@ export async function signup(
     name: formData.get("name"),
     email: formData.get("email"),
     password: formData.get("password"),
-    confirmPassword: formData.get("confirm-password"),
+    confirmPassword: formData.get("confirmPassword"),
   });
 
   if (!validatedFields.success) {
@@ -66,7 +66,7 @@ export async function signup(
     return { message: "Failed to create account." };
   }
 
-  return { message: "Account created successfully" };
+  return { message: "success" };
 }
 
 const TimetableSetSchema = z.object({
