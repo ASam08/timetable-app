@@ -119,7 +119,6 @@ export function SignupForm({
                     />
                   </Field>
                 </Field>
-
                 {state?.errors?.password && (
                   <div className="text-red-500">
                     <p>Password must:</p>
@@ -127,15 +126,14 @@ export function SignupForm({
                       {state.errors.password.map((error) => (
                         <li key={error}>- {error}</li>
                       ))}
-                      {state?.errors?.confirmPassword?.map((error) => (
-                        <p className="text-red-500" key={error}>
-                          {error}
-                        </p>
-                      ))}
                     </ul>
+                    {state?.errors?.confirmPassword?.map((error) => (
+                      <p className="text-red-500" key={error}>
+                        {error}
+                      </p>
+                    ))}
                   </div>
                 )}
-
                 <FieldDescription>
                   Must be at least 8 characters long.
                 </FieldDescription>

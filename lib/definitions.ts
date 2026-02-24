@@ -5,6 +5,7 @@ export type User = {
   password: string;
   created_at: string;
   updated_at: string;
+  account_enabled: boolean;
 };
 
 export type TimetableSet = {

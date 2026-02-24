@@ -22,6 +22,8 @@ import { authenticate } from "@/lib/actions";
 import { useSearchParams } from "next/navigation";
 import { CircleAlert } from "lucide-react";
 import Link from "next/link";
+import { useEffect } from "react";
+import { toast } from "sonner";
 
 export function LoginForm({
   className,
@@ -33,6 +35,15 @@ export function LoginForm({
     authenticate,
     undefined,
   );
+
+  useEffect(() => {
+    if (errorMessage) {
+      toast.error(errorMessage, {
+        position: "top-center",
+        description: "Please contact an administrator for support.",
+      });
+    }
+  }, [errorMessage]);
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
@@ -103,8 +114,8 @@ export function LoginForm({
                   )}
                 </div>
                 <FieldDescription className="text-center">
-                  Don't have an account? <Link href="/signup">Sign up</Link>{" "}
-                  {/* TODO: add sign-up form */}
+                  Don't have an account?{" "}
+                  <Link href="/signup">Sign up</Link>{" "}
                 </FieldDescription>
               </Field>
             </FieldGroup>

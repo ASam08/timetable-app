@@ -25,10 +25,17 @@ export async function authenticate(
   try {
     await signIn("credentials", formData);
   } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === "ACCOUNT_NOT_ENABLED") {
+        return "Your account has not been enabled yet.";
+      }
+    }
     if (error instanceof AuthError) {
       switch (error.type) {
         case "CredentialsSignin":
           return "Invalid credentials.";
+        case "CallbackRouteError":
+          return "An error occurred during authentication.";
         default:
           return "Something went wrong.";
       }
