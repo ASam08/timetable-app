@@ -25,12 +25,14 @@ export async function authenticate(
   try {
     await signIn("credentials", formData);
   } catch (error) {
-    if (error instanceof Error) {
-      if (error.message === "ACCOUNT_NOT_ENABLED") {
+    if (error instanceof AuthError) {
+      if (error.cause?.type === "AccountNotEnabled") {
+        console.warn(
+          "Account not enabled error encountered during authentication.",
+        );
         return "Your account has not been enabled yet.";
       }
-    }
-    if (error instanceof AuthError) {
+
       switch (error.type) {
         case "CredentialsSignin":
           return "Invalid credentials.";
@@ -61,13 +63,19 @@ export async function signup(
     };
   }
 
+  let accountEnabled: boolean;
+  if (process.env.APPROVE_SIGNUPS?.toLowerCase() === "true") {
+    accountEnabled = false;
+  } else {
+    accountEnabled = true;
+  }
   const { name, email, password } = validatedFields.data;
   const hashedPassword = await bcrypt.hash(password, 10);
 
   try {
     await sql`
       INSERT INTO users (name, email, password, account_enabled)
-      VALUES (${name}, ${email}, ${hashedPassword}, false)
+      VALUES (${name}, ${email}, ${hashedPassword}, ${accountEnabled})
     `;
   } catch {
     return { message: "Failed to create account." };

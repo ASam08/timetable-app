@@ -39,19 +39,17 @@ export const { auth, signIn, signOut } = NextAuth({
             return null;
           }
 
-          if (
-            process.env.APPROVE_SIGNUPS === "true" &&
-            user.account_enabled === false
-          ) {
+          if (user.account_enabled === false) {
             console.warn(`Account for ${email} is not enabled yet.`);
-            throw new Error("ACCOUNT_NOT_ENABLED");
+            throw new Error("ACCOUNT_NOT_ENABLED", {
+              cause: { type: "AccountNotEnabled" },
+            });
           }
 
           return {
             id: user.id,
             name: user.name ?? null,
             email: user.email,
-            account_enabled: true,
           };
         } else return null;
       },
