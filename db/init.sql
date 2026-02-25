@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS users (
     name VARCHAR(255) NOT NULL,
     email TEXT NOT NULL UNIQUE,
     password TEXT NOT NULL,
+    account_enabled BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -36,3 +37,7 @@ CREATE TABLE IF NOT EXISTS user_timetable_sets (
     user_id UUID NOT NULL,
     timetable_set_id UUID NOT NULL
 );
+
+-- v0.1 - Add account_enabled column to users table
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS account_enabled BOOLEAN NOT NULL DEFAULT TRUE;
