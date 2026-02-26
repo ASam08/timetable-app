@@ -8,6 +8,7 @@ import Link from "next/link";
 import { signOut } from "@/auth";
 
 export default function SideNav() {
+  const authOn = process.env.AUTH_ON?.toLowerCase() === "true";
   return (
     <div className="flex max-w-screen flex-row gap-2 bg-stone-300 px-2 py-2 md:h-full md:flex-col md:py-4 dark:bg-gray-900">
       <Link
@@ -32,17 +33,20 @@ export default function SideNav() {
         <LucideSettings />
         <span className="hidden md:flex md:pl-2">Settings</span>
       </Link>
-      <form
-        action={async () => {
-          "use server";
-          await signOut({ redirectTo: "/login" });
-        }}
-      >
-        <button className="mb-4 flex flex-row rounded-xl border-2 border-stone-500 bg-stone-400 p-2 font-semibold text-blue-600 xl:text-xl dark:border-gray-700 dark:bg-gray-800 dark:text-blue-400">
-          <LucideLogOut />
-          <span className="hidden md:flex md:pl-2">Sign Out</span>
-        </button>
-      </form>
+      {authOn && (
+        <form
+          className="flex flex-col"
+          action={async () => {
+            "use server";
+            await signOut({ redirectTo: "/login" });
+          }}
+        >
+          <button className="mb-4 flex flex-row rounded-xl border-2 border-stone-500 bg-stone-400 p-2 font-semibold text-blue-600 xl:text-xl dark:border-gray-700 dark:bg-gray-800 dark:text-blue-400">
+            <LucideLogOut />
+            <span className="hidden md:flex md:pl-2">Sign Out</span>
+          </button>
+        </form>
+      )}
     </div>
   );
 }

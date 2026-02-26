@@ -50,14 +50,15 @@ export function LoginForm({
         <CardHeader className="text-center">
           <CardTitle className="text-xl">Welcome back</CardTitle>
           <CardDescription>
-            Login with your Apple or Google account
+            Login with your email and password
+            {/* Login with your Apple or Google account */}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form action={formAction}>
             <FieldGroup>
-              <Field>
-                {/* TODO: Implement social provider auth */}
+              {/* <Field>
+                TODO: Implement social provider auth
                 <Button variant="outline" type="button">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                     <path d="" fill="currentColor" />
@@ -73,7 +74,7 @@ export function LoginForm({
               </Field>
               <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
                 Or continue with
-              </FieldSeparator>
+              </FieldSeparator> */}
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
                 <Input
@@ -87,12 +88,12 @@ export function LoginForm({
               <Field>
                 <div className="flex items-center">
                   <FieldLabel htmlFor="password">Password</FieldLabel>
-                  <a
+                  {/* <a
                     href="#"
                     className="ml-auto text-sm underline-offset-4 hover:underline"
                   >
                     Forgot your password?
-                  </a>
+                  </a> */}
                 </div>
                 <Input id="password" type="password" name="password" required />
               </Field>
