@@ -1,7 +1,6 @@
-import ToggleFormVisibility from "@/app/ui/timetable/toggleformvisibility";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { PlusCircle } from "lucide-react";
+import { LucideGrid2X2Plus, PlusCircle } from "lucide-react";
 import TimetableGridServer from "@/app/ui/timetable/timetablegridserver";
 import { getTimetableSets, getUserID } from "@/lib/data";
 
@@ -18,25 +17,32 @@ export default async function timetablePage() {
       <h1 className="mb-4 text-2xl font-bold text-gray-800 dark:text-gray-200">
         Timetable
       </h1>
-      <div className="flex-rows flex">
-        <div className="flex grow">
-          <ToggleFormVisibility />
-        </div>
-        {set_id && (
-          <div className="flex grow justify-end">
-            <Link href="\dashboard\timetable\add-block">
-              <Button className="hidden bg-blue-600 text-white sm:flex">
-                <PlusCircle /> Add Timetable Block
-              </Button>
-              <Button className="flex bg-blue-600 text-white sm:hidden">
-                <PlusCircle />
+      <div className="flex flex-col gap-2">
+        <div className="flex-rows flex">
+          <div className="flex grow">
+            <Link href="./timetable/new-timetable">
+              <Button className="bg-blue-600 text-white">
+                <LucideGrid2X2Plus />
+                Create New Timetable
               </Button>
             </Link>
           </div>
-        )}
-      </div>
+          {set_id && (
+            <div className="flex grow justify-end">
+              <Link href="\dashboard\timetable\add-block">
+                <Button className="hidden bg-blue-600 text-white sm:flex">
+                  <PlusCircle /> Add Timetable Block
+                </Button>
+                <Button className="flex bg-blue-600 text-white sm:hidden">
+                  <PlusCircle />
+                </Button>
+              </Link>
+            </div>
+          )}
+        </div>
 
-      <TimetableGridServer />
+        <TimetableGridServer />
+      </div>
     </div>
   );
 }
