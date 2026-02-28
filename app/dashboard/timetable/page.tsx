@@ -18,16 +18,20 @@ export default async function timetablePage() {
         Timetable
       </h1>
       <div className="flex flex-col gap-2">
-        <div className="flex-rows flex">
-          <div className="flex grow">
-            <Link href="./timetable/new-timetable">
-              <Button className="bg-blue-600 text-white">
-                <LucideGrid2X2Plus />
-                Create New Timetable
-              </Button>
-            </Link>
-          </div>
-          {set_id && (
+        {set_id && set_id.length > 0 && (
+          <div className="flex-rows flex">
+            <div className="flex grow">
+              <Link href="./timetable/new-timetable">
+                <Button className="hidden bg-blue-600 text-white sm:flex">
+                  <LucideGrid2X2Plus />
+                  Create New Timetable
+                </Button>
+                <Button className="flex bg-blue-600 text-white sm:hidden">
+                  <LucideGrid2X2Plus />
+                </Button>
+              </Link>
+            </div>
+
             <div className="flex grow justify-end">
               <Link href="\dashboard\timetable\add-block">
                 <Button className="hidden bg-blue-600 text-white sm:flex">
@@ -38,8 +42,8 @@ export default async function timetablePage() {
                 </Button>
               </Link>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         <TimetableGridServer />
       </div>
