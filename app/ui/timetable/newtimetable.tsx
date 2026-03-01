@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
 const startHour = 8;
-const hoursCovered = 16;
+const hoursCovered = 9;
 const slotMinutes = 15;
 
 const dow = [
@@ -139,7 +139,7 @@ export function TimetableGrid({
                 }}
               >
                 <div className="flex h-full flex-col">
-                  <div className="flex grow flex-row">
+                  <div className="flex flex-row">
                     {duration > 5 && (
                       <div className="flex grow justify-start p-0.5">
                         {e.start_time.slice(0, 5)}
@@ -155,12 +155,18 @@ export function TimetableGrid({
                     )}
                   </div>
                   <div
-                    className={`flex justify-center text-center font-bold ${duration > 6 ? "p-0.5" : duration > 4 ? "p-0 text-xs/1" : "m-0 p-0 text-[8px]/0"} `}
+                    className={`flex grow items-center justify-center text-center ${
+                      duration > 6
+                        ? "p-0.5 font-bold"
+                        : duration > 1
+                          ? "p-0 text-xs leading-none"
+                          : "p-0 text-[6px] leading-none"
+                    } `}
                   >
                     {e.subject}
                   </div>
                   {duration > 6 && (
-                    <div className="flex grow flex-row items-end">
+                    <div className="flex flex-row items-end">
                       <div className="flex grow justify-start p-0.5">
                         {e.end_time.slice(0, 5)}
                       </div>
