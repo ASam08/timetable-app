@@ -11,15 +11,21 @@ const startHour = 8;
 const hoursCovered = 9;
 const slotMinutes = 15;
 
-const rows = (hoursCovered * 60) / slotMinutes;
-
-const dow = ["Time","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-const middow = ["Time","Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-const shortdow = ["Time","M","Tu","W","Th","F","Sa","Su"];
+const dow = [
+  "Time",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
+const middow = ["Time", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const shortdow = ["Time", "M", "Tu", "W", "Th", "F", "Sa", "Su"];
 
 const minSlotMinutes = 5; // Always use 5-minute resolution
 const virtualRows = (hoursCovered * 60) / minSlotMinutes;
-const slotsPerHour = 60 / minSlotMinutes;
 const visibleSlotInterval = slotMinutes / minSlotMinutes;
 
 function timeToRow(time: string) {
@@ -27,16 +33,20 @@ function timeToRow(time: string) {
   return ((h - startHour) * 60 + m) / minSlotMinutes;
 }
 
-export function TimetableGrid({ events = [], }: { events?: RetreivedTimetableBlocks[]; }) {
+export function TimetableGrid({
+  events = [],
+}: {
+  events?: RetreivedTimetableBlocks[];
+}) {
   const [deleteMode, setDeleteMode] = useState(false);
   const [width, setWidth] = useState(1200);
   const router = useRouter();
-  
+
   const handleDeleteBlock = async (id: string) => {
     if (!confirm("Delete this block?")) return;
     await deleteBlock(id);
     router.refresh();
-  }
+  };
 
   const now = new Date();
   const jsDay = now.getDay();
@@ -49,32 +59,29 @@ export function TimetableGrid({ events = [], }: { events?: RetreivedTimetableBlo
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  const labels =
-    width > 900 ? dow :
-    width > 600 ? middow :
-        shortdow;
-  
+  const labels = width > 900 ? dow : width > 600 ? middow : shortdow;
+
   return (
     <div className="max-h-full">
-      <div className="w-full flex grow mb-1">
+      <div className="mb-1 flex w-full grow">
         <div className="flex grow justify-end">
           <Button
-            onClick={() => setDeleteMode(d => !d)}
-            className={`
-              px-3 py-1 text-sm font-medium
-              ${deleteMode
-                ? "bg-red-600 text-white"
-                : "bg-blue-600 text-white"}
-            `}
+            onClick={() => setDeleteMode((d) => !d)}
+            className={`px-3 py-1 text-sm font-medium ${
+              deleteMode ? "bg-red-600 text-white" : "bg-blue-600 text-white"
+            } `}
           >
-            <LucideEdit2 /> <span className="hidden sm:flex">{deleteMode ? "Stop Editing" : "Edit"}</span>
+            <LucideEdit2 />{" "}
+            <span className="hidden sm:flex">
+              {deleteMode ? "Stop Editing" : "Edit"}
+            </span>
           </Button>
         </div>
       </div>
-      
-      <div className="max-h-100 xl:max-h-175 overflow-auto border dark:border-slate-700 border-slate-400">
+
+      <div className="max-h-100 overflow-auto border border-slate-400 xl:max-h-175 dark:border-slate-700">
         <div
-          className="grid grid-cols-[60px_repeat(7,1fr)] min-w-175"
+          className="grid min-w-175 grid-cols-[60px_repeat(7,1fr)]"
           style={{
             gridTemplateRows: `40px repeat(${virtualRows}, 8px)`,
           }}
@@ -83,14 +90,7 @@ export function TimetableGrid({ events = [], }: { events?: RetreivedTimetableBlo
           {labels.map((label, i) => (
             <div
               key={`h-${i}`}
-              className={`
-                sticky top-0 z-12
-                flex items-center justify-center
-                border dark:border-slate-700 border-slate-400
-              text-black dark:text-white font-semibold text-sm
-                ${i == 0 ? "z-13 left-0 dark:bg-slate-800 bg-slate-300" : ""}
-                ${i == dayOfWeek ? "bg-blue-800 text-white": "dark:bg-slate-800 bg-slate-300"}
-            `}
+              className={`sticky top-0 z-12 flex items-center justify-center border border-slate-400 text-sm font-semibold text-black dark:border-slate-700 dark:text-white ${i == 0 ? "left-0 z-13 bg-slate-300 dark:bg-slate-800" : ""} ${i == dayOfWeek ? "bg-blue-800 text-white" : "bg-slate-300 dark:bg-slate-800"} `}
               style={{ gridColumn: i + 1, gridRow: 1 }}
             >
               {label}
@@ -107,16 +107,15 @@ export function TimetableGrid({ events = [], }: { events?: RetreivedTimetableBlo
             return (
               <div
                 key={`t-${i}`}
-                className={`
-                  sticky left-0 z-10 bg-slate-200 dark:bg-slate-900 h-3 w-full flex items-center justify-end
-                  text-xs dark:text-slate-300 text-slate-700 pr-1 text-right
-                  ${showLabel ? "border-t overflow-visible z-11 h-3 dark:border-slate-700 border-slate-300" : ""}
-                  border-r border-l dark:border-slate-700 border-slate-300
-                `}
+                className={`sticky left-0 z-10 flex h-3 w-full items-center justify-end bg-slate-200 pr-1 text-right text-xs text-slate-700 dark:bg-slate-900 dark:text-slate-300 ${showLabel ? "z-11 h-3 overflow-visible border-t border-slate-300 dark:border-slate-700" : ""} border-r border-l border-slate-300 dark:border-slate-700`}
                 style={{ gridColumn: 1, gridRow: i + 2 }}
               >
                 {showLabel ? (
-                  minute === 0 ? <span className="font-bold">{label}</span> : label
+                  minute === 0 ? (
+                    <span className="font-bold">{label}</span>
+                  ) : (
+                    label
+                  )
                 ) : (
                   <span>&nbsp;</span>
                 )}
@@ -125,49 +124,58 @@ export function TimetableGrid({ events = [], }: { events?: RetreivedTimetableBlo
           })}
 
           {/* ===== Events ===== */}
-          {(events ?? []).filter(Boolean).map(e => {
+          {(events ?? []).filter(Boolean).map((e) => {
             const start = Math.max(0, timeToRow(e.start_time));
             const end = Math.min(virtualRows, timeToRow(e.end_time));
+            const duration = end - start;
             if (end <= 0 || start >= virtualRows) return null;
             return (
               <div
                 key={e.id}
-                className={`
-                  rounded-lg dark:border-blue-900 border-blue-100 border text-white text-xs
-                  px-1 py-0.5 m-[1px]
-                  overflow-hidden
-                  flex flex-col h-full
-                  ${(e.day_of_week) == dayOfWeek ? "bg-blue-600" : "bg-blue-800"}
-                `}
+                className={`m-[1px] flex h-full flex-col overflow-hidden rounded-lg border border-blue-100 px-1 py-0.5 text-xs text-white dark:border-blue-900 ${e.day_of_week == dayOfWeek ? "bg-blue-600" : "bg-blue-800"} `}
                 style={{
                   gridColumn: +e.day_of_week + 1,
                   gridRow: `${start + 2} / ${end + 2}`,
                 }}
               >
-                <div className="flex flex-col h-full">
-                  <div className="flex-row flex grow items-start">
-                    <div className="justify-start flex grow p-0.5">
-                    {e.start_time.slice(0, 5)}
-                    </div>
-                    <div className="flex grow justify-end p-0.5">
-                      {deleteMode && (
-                        <LucideX className="size-4 text-gray-300 hover:text-white cursor-pointer" onClick={() => handleDeleteBlock(e.id)} />
-                      )}
-                    </div>
+                <div className="flex h-full flex-col">
+                  <div className="flex flex-row">
+                    {duration > 5 && (
+                      <div className="flex grow justify-start p-0.5">
+                        {e.start_time.slice(0, 5)}
+                      </div>
+                    )}
+                    {deleteMode && (
+                      <div className="flex grow justify-end p-0.5">
+                        <LucideX
+                          className="size-4 cursor-pointer text-gray-300 hover:text-white"
+                          onClick={() => handleDeleteBlock(e.id)}
+                        />
+                      </div>
+                    )}
                   </div>
-                  <div className="flex-1 flex items-center justify-center font-bold">
+                  <div
+                    className={`flex grow items-center justify-center text-center ${
+                      duration > 6
+                        ? "p-0.5 font-bold"
+                        : duration > 1
+                          ? "p-0 text-xs leading-none"
+                          : "p-0 text-[6px] leading-none"
+                    } `}
+                  >
                     {e.subject}
                   </div>
-                  <div className="flex-row flex grow items-end">
-                  
-                  <div className="flex grow justify-start p-0.5">
-                    {e.end_time.slice(0, 5)}
+                  {duration > 6 && (
+                    <div className="flex flex-row items-end">
+                      <div className="flex grow justify-start p-0.5">
+                        {e.end_time.slice(0, 5)}
+                      </div>
+                      <div className="flex grow justify-end p-0.5">
+                        {e.location}
+                      </div>
                     </div>
-                    <div className="flex grow justify-end p-0.5">
-                    {e.location}
-                  </div>
-                    </div>
-                  </div>
+                  )}
+                </div>
               </div>
             );
           })}

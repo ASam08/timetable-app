@@ -9,7 +9,7 @@ export default async function addBlockPage() {
   }
   const sets = await getTimetableSets(user_id);
 
-  if (!Array.isArray(sets) || sets.length === 0 || !user_id) {
+  if (sets.length === 0) {
     redirect("/dashboard/timetable");
   }
 
