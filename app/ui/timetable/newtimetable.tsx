@@ -7,8 +7,6 @@ import { deleteBlock } from "@/lib/actions";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
-const startHour = 8;
-const hoursCovered = 9;
 const slotMinutes = 15;
 
 const dow = [
@@ -25,22 +23,27 @@ const middow = ["Time", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const shortdow = ["Time", "M", "Tu", "W", "Th", "F", "Sa", "Su"];
 
 const minSlotMinutes = 5; // Always use 5-minute resolution
-const virtualRows = (hoursCovered * 60) / minSlotMinutes;
 const visibleSlotInterval = slotMinutes / minSlotMinutes;
 
-function timeToRow(time: string) {
+function timeToRow(time: string, startHour: number) {
   const [h, m] = time.split(":").map(Number);
   return ((h - startHour) * 60 + m) / minSlotMinutes;
 }
 
 export function TimetableGrid({
   events = [],
+  settings,
 }: {
   events?: RetreivedTimetableBlocks[];
+  settings: Record<string, string> | null;
 }) {
   const [deleteMode, setDeleteMode] = useState(false);
   const [width, setWidth] = useState(1200);
   const router = useRouter();
+  const startHour = Number(settings?.["start_time"]?.slice(0, 2)) || 8;
+  const endHour = Number(settings?.["end_time"]?.slice(0, 2)) || 17;
+  const hoursCovered = endHour - startHour;
+  const virtualRows = (hoursCovered * 60) / minSlotMinutes;
 
   const handleDeleteBlock = async (id: string) => {
     if (!confirm("Delete this block?")) return;
@@ -125,8 +128,8 @@ export function TimetableGrid({
 
           {/* ===== Events ===== */}
           {(events ?? []).filter(Boolean).map((e) => {
-            const start = Math.max(0, timeToRow(e.start_time));
-            const end = Math.min(virtualRows, timeToRow(e.end_time));
+            const start = Math.max(0, timeToRow(e.start_time, startHour));
+            const end = Math.min(virtualRows, timeToRow(e.end_time, startHour));
             const duration = end - start;
             if (end <= 0 || start >= virtualRows) return null;
             return (

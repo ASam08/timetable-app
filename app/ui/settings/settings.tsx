@@ -10,20 +10,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  HoverCard,
+  HoverCardTrigger,
+  HoverCardContent,
+} from "@/components/ui/hover-card";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { settingsSave } from "@/lib/actions";
 import Link from "next/link";
+import { LucideCircleQuestionMark } from "lucide-react";
 
 export default function SettingsFormClient({
   userId,
-  startTime,
-  endTime,
+  settings,
 }: {
   userId: string;
-  startTime: string;
-  endTime: string;
+  settings: Record<string, string> | null;
 }) {
   const initialState = { message: null, errors: {} };
+  const startTime = settings?.["start_time"] ?? "09:00";
+  const endTime = settings?.["end_time"] ?? "17:00";
 
   return (
     <form action={settingsSave}>
@@ -36,21 +42,21 @@ export default function SettingsFormClient({
           Fill in the details below to update your settings.
         </div>
       </div>
-
-      <div className="flex flex-row gap-4">
-        <div className="flex flex-col gap-4">
-          <Field className="flex">
-            <FieldLabel htmlFor="start-time-picker">Start Time</FieldLabel>
-            <Input
-              type="time"
-              id="start_time"
-              name="start_time"
-              step="900"
-              defaultValue={startTime}
-              className="bg-background appearance-none pr-4 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
-            />
-          </Field>
-          {/* <div id="start_time_error" aria-live="polite" aria-atomic="true">
+      <div className="grid gap-6">
+        <div className="flex flex-row gap-4">
+          <div className="flex flex-col gap-4">
+            <Field className="flex">
+              <FieldLabel htmlFor="start-time-picker">Start Time</FieldLabel>
+              <Input
+                type="time"
+                id="start_time"
+                name="start_time"
+                step="3600"
+                defaultValue={startTime}
+                className="bg-background appearance-none pr-4 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+              />
+            </Field>
+            {/* <div id="start_time_error" aria-live="polite" aria-atomic="true">
               {state.errors?.start_time &&
                 state.errors.start_time.map((error: string) => (
                   <p className="text-sm text-red-500" key={error}>
@@ -58,21 +64,21 @@ export default function SettingsFormClient({
                   </p>
                 ))}
             </div> */}
-        </div>
-        <div className="flex flex-col gap-4">
-          <Field className="flex">
-            <FieldLabel htmlFor="finish-time-picker">Finish Time</FieldLabel>
-            <Input
-              type="time"
-              id="end_time"
-              name="end_time"
-              step="300"
-              defaultValue={endTime}
-              className="bg-background appearance-none pr-4 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
-            />
-          </Field>
-        </div>
-        {/* <div
+          </div>
+          <div className="flex flex-col gap-4">
+            <Field className="flex">
+              <FieldLabel htmlFor="end-time-picker">End Time</FieldLabel>
+              <Input
+                type="time"
+                id="end_time"
+                name="end_time"
+                step="3600"
+                defaultValue={endTime}
+                className="bg-background appearance-none pr-4 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+              />
+            </Field>
+          </div>
+          {/* <div
             className="grid items-center pt-5"
             id="end_time_error"
             aria-live="polite"
@@ -85,7 +91,20 @@ export default function SettingsFormClient({
                 </p>
               ))}
           </div> */}
+          <div className="">
+            <HoverCard openDelay={10} closeDelay={100}>
+              <HoverCardTrigger asChild>
+                <LucideCircleQuestionMark className="size-4" />
+              </HoverCardTrigger>
+              <HoverCardContent className="max-w-xl text-xs" side="right">
+                Start and End times are used to determine the hours shown on the
+                timetable.
+              </HoverCardContent>
+            </HoverCard>
+          </div>
+        </div>
       </div>
+
       <div className="flex flex-row gap-4 py-4">
         <Link href="/dashboard/timetable">
           <Button variant="outline">Cancel</Button>

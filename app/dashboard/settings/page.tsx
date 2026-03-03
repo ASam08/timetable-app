@@ -7,16 +7,9 @@ export default async function SettingsPage() {
     return <p>You must be logged in</p>;
   }
 
-  const startTime =
-    (await getUserSettings(userId, "start_time"))?.setting_value ?? "09:00";
-  const endTime =
-    (await getUserSettings(userId, "end_time"))?.setting_value ?? "17:00";
+  const startTime = (await getUserSettings(userId))?.["start_time"] ?? "09:00";
+  const endTime = (await getUserSettings(userId))?.["end_time"] ?? "17:00";
+  const settings = (await getUserSettings(userId)) ?? null;
 
-  return (
-    <SettingsFormClient
-      userId={userId}
-      startTime={startTime}
-      endTime={endTime}
-    />
-  );
+  return <SettingsFormClient userId={userId} settings={settings} />;
 }
