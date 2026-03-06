@@ -18,6 +18,11 @@ import { SignupFormSchema, SignupFormState } from "./signupschema";
 
 const sql = sqlConn;
 
+const toMinutes = (time: string) => {
+  const [hours, minutes] = time.split(":").map(Number);
+  return hours * 60 + minutes;
+};
+
 export async function authenticate(
   prevState: string | undefined,
   formData: FormData,
@@ -184,7 +189,7 @@ export async function addTimetableBlock(
   }
   const set_id = await getTimetableSets(user_id);
   const validatedFields = createTimetableBlock.safeParse({
-    timetable_set_id: /*formData.get("timetable_set_id"),*/ set_id[0].id,
+    timetable_set_id: set_id[0].id,
     day: formData.get("day_of_week"),
     subject: formData.get("subject"),
     location: formData.get("location"),
@@ -293,6 +298,79 @@ export async function deleteBlock(id: string) {
     console.error("Error - ", error);
     return {
       message: "Error deleting block",
+      error,
+    };
+  }
+}
+
+export type SettingsState = {
+  errors?: {
+    start_time?: string[];
+    end_time?: string[];
+  };
+  message?: string | null;
+};
+
+const settingsSchema = z
+  .object({
+    start_time: z.string().min(1, "Start time is required"),
+    end_time: z.string().min(1, "End time is required"),
+  })
+  .refine((data) => toMinutes(data.end_time) > toMinutes(data.start_time), {
+    path: ["end_time"],
+    message: "End time must be after start time",
+  });
+
+export async function settingsSave(
+  prevState: SettingsState,
+  formData: FormData,
+): Promise<SettingsState> {
+  const user_id = await getUserID();
+  if (!user_id) {
+    return { message: "User not authenticated." };
+  }
+
+  const rawSettings = {
+    start_time: formData.get("start_time"),
+    end_time: formData.get("end_time"),
+  };
+  const validatedSettings = settingsSchema.safeParse(rawSettings);
+  if (!validatedSettings.success) {
+    return { errors: validatedSettings.error.flatten().fieldErrors };
+  }
+
+  const data = Array.from(formData.entries());
+  const result = await updateSettings(user_id, data);
+
+  revalidatePath("/dashboard/settings");
+  return { message: result?.message };
+}
+
+export async function updateSettings(
+  user_id: string,
+  data: [string, FormDataEntryValue][],
+) {
+  const ALLOWED_SETTINGS = new Set(["start_time", "end_time"]);
+
+  const rows = data
+    .filter(([key]) => ALLOWED_SETTINGS.has(key))
+    .map(([key, value]) => [user_id, key, String(value)]);
+
+  if (rows.length === 0) return;
+  try {
+    await sql`
+    INSERT INTO user_settings (user_id, setting_key, setting_value)
+    VALUES ${sql(rows)}
+    ON CONFLICT (user_id, setting_key)
+    DO UPDATE SET setting_value = EXCLUDED.setting_value, updated_at = NOW()
+  `;
+
+    console.log("Settings updated for user %s", user_id);
+    return { message: "success", errors: {} };
+  } catch (error) {
+    console.error("Error updating settings:", error);
+    return {
+      message: "Error updating settings",
       error,
     };
   }

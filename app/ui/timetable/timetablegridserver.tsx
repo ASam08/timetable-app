@@ -1,4 +1,9 @@
-import { getTimetableBlocks, getTimetableSets, getUserID } from "@/lib/data";
+import {
+  getTimetableBlocks,
+  getTimetableSets,
+  getUserID,
+  getUserSettings,
+} from "@/lib/data";
 import { TimetableGrid } from "./newtimetable";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -42,5 +47,6 @@ export default async function TimetableGridServer() {
       </div>
     );
   const events = await getTimetableBlocks(setId[0].id);
-  return <TimetableGrid events={events ?? []} />;
+  const settings = (await getUserSettings(user_id)) ?? null;
+  return <TimetableGrid events={events ?? []} settings={settings} />;
 }

@@ -127,3 +127,19 @@ export async function getNextBreak(
 
   return result[0] ?? null;
 }
+
+export async function getUserSettings(user_id: string) {
+  try {
+    const rows = await sql<{ setting_key: string; setting_value: string }[]>`
+      SELECT setting_key, setting_value FROM user_settings
+      WHERE user_id = ${user_id}
+    `;
+    const settings = Object.fromEntries(
+      rows.map((row) => [row.setting_key, row.setting_value]),
+    );
+    return settings ?? null;
+  } catch (error) {
+    console.error("Error fetching user settings:", error);
+    return null;
+  }
+}
