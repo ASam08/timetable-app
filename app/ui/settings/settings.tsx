@@ -21,6 +21,7 @@ import Link from "next/link";
 import { LucideCircleQuestionMark } from "lucide-react";
 import { useActionState, useState, useEffect } from "react";
 import { toast } from "sonner";
+import { defaultSettings } from "@/lib/defaults";
 
 export default function SettingsFormClient({
   settings,
@@ -31,8 +32,8 @@ export default function SettingsFormClient({
   const [state, formAction] = useActionState(settingsSave, initialState);
   const [error, setError] = useState<string | null>(null);
 
-  const startTime = settings?.["start_time"] ?? "09:00";
-  const endTime = settings?.["end_time"] ?? "17:00";
+  const startTime = settings?.["start_time"] ?? defaultSettings.start_time;
+  const endTime = settings?.["end_time"] ?? defaultSettings.end_time;
 
   const validateTimes = (start: string, end: string) => {
     if (!start || !end) return;
