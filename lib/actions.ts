@@ -15,6 +15,7 @@ import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
 import bcrypt from "bcryptjs";
 import { SignupFormSchema, SignupFormState } from "./signupschema";
+import { dow } from "@/lib/constants";
 
 const sql = sqlConn;
 
@@ -340,7 +341,20 @@ export async function settingsSave(
     return { errors: validatedSettings.error.flatten().fieldErrors };
   }
 
-  const data = Array.from(formData.entries());
+  const { start_time, end_time } = validatedSettings.data;
+  const timeSettings: [string, FormDataEntryValue][] = [
+    ["start_time", start_time],
+    ["end_time", end_time],
+  ];
+
+  const dayValues = Object.fromEntries(
+    dow.map((day): [string, FormDataEntryValue] => [
+      day,
+      formData.get(day) ? "true" : "false",
+    ]),
+  );
+
+  const data = [...timeSettings, ...Object.entries(dayValues)];
   const result = await updateSettings(user_id, data);
 
   revalidatePath("/dashboard/settings");
@@ -351,10 +365,20 @@ export async function updateSettings(
   user_id: string,
   data: [string, FormDataEntryValue][],
 ) {
-  const ALLOWED_SETTINGS = new Set(["start_time", "end_time"]);
+  const ALLOWED_SETTINGS = new Set([
+    "start_time",
+    "end_time",
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+  ]);
 
   const rows = data
-    .filter(([key]) => ALLOWED_SETTINGS.has(key))
+    .filter(([key, value]) => ALLOWED_SETTINGS.has(key) && value !== null)
     .map(([key, value]) => [user_id, key, String(value)]);
 
   if (rows.length === 0) return;

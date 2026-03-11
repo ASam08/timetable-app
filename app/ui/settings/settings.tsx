@@ -23,6 +23,8 @@ import { LucideCircleQuestionMark } from "lucide-react";
 import { useActionState, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { defaultTimeSettings, defaultDaySettings } from "@/lib/defaults";
+import { dowKeyValue } from "@/lib/constants";
+import { useRouter } from "next/navigation";
 
 export default function SettingsFormClient({
   settings,
@@ -32,6 +34,7 @@ export default function SettingsFormClient({
   const initialState: SettingsState = { message: null, errors: {} };
   const [state, formAction] = useActionState(settingsSave, initialState);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   const startTime = settings?.["start_time"] ?? defaultTimeSettings.start_time;
   const endTime = settings?.["end_time"] ?? defaultTimeSettings.end_time;
@@ -60,17 +63,8 @@ export default function SettingsFormClient({
         style: { backgroundColor: "red" },
       });
     }
-  }, [state?.timestamp]);
-
-  const dow = [
-    { key: "monday", label: "Monday" },
-    { key: "tuesday", label: "Tuesday" },
-    { key: "wednesday", label: "Wednesday" },
-    { key: "thursday", label: "Thursday" },
-    { key: "friday", label: "Friday" },
-    { key: "saturday", label: "Saturday" },
-    { key: "sunday", label: "Sunday" },
-  ];
+    router.refresh();
+  }, [state?.timestamp, router]);
 
   return (
     <form action={formAction}>
@@ -173,10 +167,12 @@ export default function SettingsFormClient({
       {/* this component will have a checkbox for each day of the week that will be set to the valie pulled from settings.{dow} */}
       <div className="">
         <div className="flex flex-col gap-2">
-          {dow.map((day) => (
+          {dowKeyValue.map((day) => (
             <div key={day.key} className="flex flex-row gap-4">
               <Checkbox
                 id={day.key}
+                name={day.key}
+                value="true"
                 defaultChecked={
                   settings?.[day.key] !== undefined
                     ? settings[day.key] === "true"
