@@ -15,12 +15,36 @@ import { addTimetableBlock, BlockState } from "@/lib/actions";
 import Link from "next/link";
 import { useState, useActionState } from "react";
 import { dowKeyValue } from "@/lib/constants";
+import { defaultDaySettings } from "@/lib/defaults";
 
-export default function AddTimetableBlock() {
+export default function AddTimetableBlock({
+  settings,
+}: {
+  settings: Record<string, string> | null;
+}) {
   const initialState: BlockState = { message: null, errors: {} };
   const [state, formAction] = useActionState(addTimetableBlock, initialState);
+  const [dowHidden, setDowHidden] = useState(false);
+  const [day_of_week, setDayOfWeek] = useState("");
 
   const dow = dowKeyValue;
+
+  const checkDowHidden = (day: string) => {
+    console.log("Checking if day is hidden: ", day);
+    const lowerDay = dow.filter((d) => String(d.dow) === day)[0]?.key;
+    setDayOfWeek(dow.filter((d) => String(d.dow) === day)[0]?.label || "");
+    console.log("Lower Day: ", lowerDay);
+    const daySettings = settings?.[lowerDay];
+    console.log("Day Settings: ", daySettings);
+    if (daySettings === undefined) {
+      setDowHidden(!defaultDaySettings[lowerDay]);
+    }
+    if (daySettings === "true") {
+      setDowHidden(false);
+    } else {
+      setDowHidden(true);
+    }
+  };
 
   return (
     <form action={formAction}>
@@ -36,7 +60,10 @@ export default function AddTimetableBlock() {
         <div className="grid gap-3">
           <Label>Day</Label>
 
-          <Select name="day_of_week">
+          <Select
+            name="day_of_week"
+            onValueChange={(value) => checkDowHidden(value)}
+          >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select a day" />
             </SelectTrigger>
@@ -57,6 +84,12 @@ export default function AddTimetableBlock() {
                   {error}
                 </p>
               ))}
+            {dowHidden && (
+              <p className="text-sm text-yellow-800 dark:text-yellow-300">
+                {day_of_week} is hidden currently, don't forget to unhide it in
+                settings!
+              </p>
+            )}
           </div>
         </div>
         <div className="grid gap-3">
