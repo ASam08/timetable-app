@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { RetreivedTimetableBlocks } from "@/lib/definitions";
 import { LucideEdit2, LucideX } from "lucide-react";
 import { deleteBlock } from "@/lib/actions";
@@ -17,12 +17,6 @@ const visibleSlotInterval = slotMinutes / minSlotMinutes;
 function timeToRow(time: string, startHour: number) {
   const [h, m] = time.split(":").map(Number);
   return ((h - startHour) * 60 + m) / minSlotMinutes;
-}
-
-function getDayIndex(key: number, dow: string[]) {
-  const day = dowKeyValue.find((d) => d.dow === key);
-  const dayIndex = dow.find((d) => d === day?.label);
-  return dayIndex !== undefined ? dow.indexOf(dayIndex) : null;
 }
 
 export function TimetableGrid({
@@ -54,6 +48,11 @@ export function TimetableGrid({
   const dow = ["Time", ...dowArray.map((day) => day.label)];
   const middow = ["Time", ...dowArray.map((day) => day.mid)];
   const shortdow = ["Time", ...dowArray.map((day) => day.short)];
+
+  const dayColumnMap = useMemo(
+    () => Object.fromEntries(dowArray.map((day, i) => [day.dow, i + 2])),
+    [dowArray],
+  );
 
   const hoursCovered = endHour - startHour;
   const virtualRows = (hoursCovered * 60) / minSlotMinutes;
@@ -147,15 +146,14 @@ export function TimetableGrid({
             const start = Math.max(0, timeToRow(e.start_time, startHour));
             const end = Math.min(virtualRows, timeToRow(e.end_time, startHour));
             const duration = end - start;
-            const dayIndex = getDayIndex(Number(e.day_of_week), dow);
-            if (end <= 0 || start >= virtualRows || dayIndex === null)
-              return null;
+            const dayIndex = dayColumnMap[e.day_of_week];
+            if (end <= 0 || start >= virtualRows || !dayIndex) return null;
             return (
               <div
                 key={e.id}
                 className={`m-[1px] flex h-full flex-col overflow-hidden rounded-lg border border-blue-100 px-1 py-0.5 text-xs text-white dark:border-blue-900 ${e.day_of_week == dayOfWeek ? "bg-blue-600" : "bg-blue-800"} `}
                 style={{
-                  gridColumn: dayIndex + 1,
+                  gridColumn: dayIndex,
                   gridRow: `${start + 2} / ${end + 2}`,
                 }}
               >
