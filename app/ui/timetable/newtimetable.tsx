@@ -11,10 +11,6 @@ import { dowKeyValue, dowShortened } from "@/lib/constants";
 
 const slotMinutes = 15;
 
-const dow = ["Time", ...dowShortened.map((day) => day.label)];
-const middow = ["Time", ...dowShortened.map((day) => day.mid)];
-const shortdow = ["Time", ...dowShortened.map((day) => day.short)];
-
 const minSlotMinutes = 5; // Always use 5-minute resolution
 const visibleSlotInterval = slotMinutes / minSlotMinutes;
 
@@ -23,7 +19,7 @@ function timeToRow(time: string, startHour: number) {
   return ((h - startHour) * 60 + m) / minSlotMinutes;
 }
 
-function getDayIndex(key: number) {
+function getDayIndex(key: number, dow: string[]) {
   const day = dowKeyValue.find((d) => d.dow === key);
   const dayIndex = dow.find((d) => d === day?.label);
   return dayIndex !== undefined ? dow.indexOf(dayIndex) : null;
@@ -45,9 +41,24 @@ export function TimetableGrid({
   const endHour = Number(
     (settings?.["end_time"] ?? defaultTimeSettings.end_time).slice(0, 2),
   );
+
+  const dowArray = dowShortened.filter((day) => {
+    const key = day.key;
+    const raw = settings?.[key];
+    if (raw === undefined) {
+      return !!defaultDaySettings[key];
+    }
+    return raw === "true";
+  });
+
+  const dow = ["Time", ...dowArray.map((day) => day.label)];
+  const middow = ["Time", ...dowArray.map((day) => day.mid)];
+  const shortdow = ["Time", ...dowArray.map((day) => day.short)];
+
   const hoursCovered = endHour - startHour;
   const virtualRows = (hoursCovered * 60) / minSlotMinutes;
-  const columns = dow.length - 1;
+  const columns: number = dow.length - 1;
+  console.log("Columns: ", columns);
 
   const handleDeleteBlock = async (id: string) => {
     if (!confirm("Delete this block?")) return;
@@ -88,8 +99,9 @@ export function TimetableGrid({
 
       <div className="max-h-100 overflow-auto border border-slate-400 xl:max-h-175 dark:border-slate-700">
         <div
-          className={`grid min-w-175 grid-cols-[60px_repeat(${columns},1fr)]`}
+          className="grid min-w-175"
           style={{
+            gridTemplateColumns: `60px repeat(${columns}, minmax(0, 1fr))`,
             gridTemplateRows: `40px repeat(${virtualRows}, 8px)`,
           }}
         >
@@ -135,8 +147,7 @@ export function TimetableGrid({
             const start = Math.max(0, timeToRow(e.start_time, startHour));
             const end = Math.min(virtualRows, timeToRow(e.end_time, startHour));
             const duration = end - start;
-            const dayIndex = getDayIndex(Number(e.day_of_week));
-            console.log(e.id, e.day_of_week, dayIndex);
+            const dayIndex = getDayIndex(Number(e.day_of_week), dow);
             if (end <= 0 || start >= virtualRows || dayIndex === null)
               return null;
             return (
