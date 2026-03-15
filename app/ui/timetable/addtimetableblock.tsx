@@ -11,19 +11,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { addTimetableBlock, BlockState } from "@/lib/actions";
 import Link from "next/link";
-import { useState, useActionState } from "react";
+import { useState, useActionState, useRef } from "react";
 import { dowKeyValue } from "@/lib/constants";
 import { defaultDaySettings } from "@/lib/defaults";
 
@@ -36,7 +35,8 @@ export default function AddTimetableBlock({
   const [state, formAction] = useActionState(addTimetableBlock, initialState);
   const [dowHidden, setDowHidden] = useState(false);
   const [day_of_week, setDayOfWeek] = useState("");
-  const [showDowDialog, setShowDowDialog] = useState(false);
+  const [showDowAlertDialog, setShowDowAlertDialog] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const dow = dowKeyValue;
 
@@ -55,7 +55,7 @@ export default function AddTimetableBlock({
   };
 
   return (
-    <form action={formAction}>
+    <form action={formAction} ref={formRef}>
       <div className="pb-4">
         <h1 className="mb-4 text-2xl font-bold text-gray-800 dark:text-gray-200">
           Add Timetable Block
@@ -192,38 +192,55 @@ export default function AddTimetableBlock({
         <Link href="/dashboard/timetable">
           <Button variant="outline">Cancel</Button>
         </Link>
-        <Button type="submit">Save changes</Button>
+        <Button
+          type="button"
+          onClick={() => {
+            if (dowHidden) {
+              setShowDowAlertDialog(true);
+            } else {
+              formRef.current?.requestSubmit();
+            }
+          }}
+        >
+          Save changes
+        </Button>
       </div>
-      <Button onClick={() => setShowDowDialog(true)}>
-        Show Day of Week Dialog
+      <Button onClick={() => setShowDowAlertDialog(true)}>
+        Show Day of Week Alert
       </Button>
-      <Dialog open={showDowDialog} onOpenChange={setShowDowDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{day_of_week} is hidden</DialogTitle>
-            <DialogDescription>
+      <AlertDialog
+        open={showDowAlertDialog}
+        onOpenChange={setShowDowAlertDialog}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{day_of_week} is hidden</AlertDialogTitle>
+            <AlertDialogDescription>
               This day is currently hidden in your timetable settings. Would you
               like to unhide it now?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction
               onClick={() => {
-                // changeDowSettings(day_of_week.toLowerCase(), "true");
-                setShowDowDialog(false);
+                setShowDowAlertDialog(false);
+                formRef.current?.requestSubmit();
               }}
             >
               Yes, unhide it
-            </Button>
-            <Button
-              onClick={() => setShowDowDialog(false)}
+            </AlertDialogAction>
+            <AlertDialogAction
+              onClick={() => {
+                setShowDowAlertDialog(false);
+                formRef.current?.requestSubmit();
+              }}
               variant={"secondary"}
             >
               No, leave it hidden
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </form>
   );
 }
