@@ -205,9 +205,6 @@ export default function AddTimetableBlock({
           Save changes
         </Button>
       </div>
-      <Button onClick={() => setShowDowAlertDialog(true)}>
-        Show Day of Week Alert
-      </Button>
       <AlertDialog
         open={showDowAlertDialog}
         onOpenChange={setShowDowAlertDialog}
