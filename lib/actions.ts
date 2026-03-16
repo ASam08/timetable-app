@@ -361,6 +361,17 @@ export async function settingsSave(
   return { message: result?.message, timestamp: Date.now() };
 }
 
+export async function unhideDow(dayKey: string) {
+  const user_id = await getUserID();
+  if (!user_id) {
+    return { message: "User not authenticated." };
+  }
+
+  await updateSettings(user_id, [[dayKey, "true"]]);
+
+  revalidatePath("/dashboard/settings");
+}
+
 export async function updateSettings(
   user_id: string,
   data: [string, FormDataEntryValue][],

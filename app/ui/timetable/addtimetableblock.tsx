@@ -18,6 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogAction,
+  AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { addTimetableBlock, BlockState } from "@/lib/actions";
@@ -25,6 +26,7 @@ import Link from "next/link";
 import { useState, useActionState, useRef } from "react";
 import { dowKeyValue } from "@/lib/constants";
 import { defaultDaySettings } from "@/lib/defaults";
+import { unhideDow } from "@/lib/actions";
 
 export default function AddTimetableBlock({
   settings,
@@ -92,12 +94,6 @@ export default function AddTimetableBlock({
                   {error}
                 </p>
               ))}
-            {dowHidden && (
-              <p className="text-sm text-yellow-800 dark:text-yellow-300">
-                {day_of_week} is hidden currently, don't forget to unhide it in
-                settings!
-              </p>
-            )}
           </div>
         </div>
         <div className="grid gap-3">
@@ -219,7 +215,10 @@ export default function AddTimetableBlock({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogAction
-              onClick={() => {
+              onClick={async () => {
+                if (day_of_week) {
+                  await unhideDow(day_of_week.toLowerCase());
+                }
                 setShowDowAlertDialog(false);
                 formRef.current?.requestSubmit();
               }}
@@ -235,6 +234,9 @@ export default function AddTimetableBlock({
             >
               No, leave it hidden
             </AlertDialogAction>
+            <AlertDialogCancel variant={"destructive"}>
+              Cancel
+            </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
