@@ -9,6 +9,7 @@ import {
   getNextBlock,
   getUserID,
   getNextBreak,
+  blockConflictCheck,
 } from "@/lib/data";
 import { sqlConn } from "@/lib/db";
 import { signIn } from "@/auth";
@@ -16,6 +17,7 @@ import { AuthError } from "next-auth";
 import bcrypt from "bcryptjs";
 import { SignupFormSchema, SignupFormState } from "./signupschema";
 import { dow } from "@/lib/constants";
+import { RetreivedTimetableBlocks } from "./definitions";
 
 const sql = sqlConn;
 
@@ -146,6 +148,13 @@ export type BlockState = {
     start_time?: string[];
     end_time?: string[];
   };
+  conflicts?: {
+    id: string;
+    subject: string;
+    start_time: string;
+    end_time: string;
+  }[];
+  consoleLog?: any; 
   message?: string | null;
 };
 
@@ -201,12 +210,23 @@ export async function addTimetableBlock(
     return {
       errors: validatedFields.error.flatten().fieldErrors,
       message: "Missing fields. Failed to add timetable block.",
-      consoleLog: console.log(validatedFields.error),
     };
   }
   const { timetable_set_id, day, subject, location, start_time, end_time } =
     validatedFields.data;
 
+  const conflicts = await blockConflictCheck(
+    timetable_set_id,
+    day,
+    start_time,
+    end_time
+  );
+  if (conflicts.length > 0) {
+      return {
+        error: "Time conflict with existing block(s)",
+        conflicts: conflicts
+      };
+    }
   try {
     await sql`
             INSERT INTO timetable_blocks (timetable_set_id, day_of_week, subject, location, start_time, end_time)
