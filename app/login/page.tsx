@@ -1,4 +1,3 @@
-import { GalleryVerticalEnd } from "lucide-react";
 import { Suspense } from "react";
 import { LoginForm } from "@/components/ui/login/login-form";
 import { redirect } from "next/navigation";
