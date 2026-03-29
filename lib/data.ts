@@ -10,7 +10,6 @@ import { auth } from "@/auth";
 import * as schema from "@/db/schema";
 import { sql, and, eq, gt, gte, lt, lte, isNull } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
-import { start } from "repl";
 
 const sqlConn = newsqlConn;
 
