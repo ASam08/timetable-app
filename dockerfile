@@ -35,11 +35,8 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/db/migrations ./db/migrations
 COPY --from=builder --chown=nextjs:nodejs /app/db/migrate.ts ./db/migrate.ts
 
-# Copy tsx and esbuild for running the migration script
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/tsx ./node_modules/tsx
-
 USER nextjs
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "node --import tsx/esm db/migrate.ts && node server.js"]
+CMD ["node",  "server.js"]
