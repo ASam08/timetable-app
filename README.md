@@ -109,7 +109,7 @@ volumes:
 
 **2. Fill in your environment variables**
 
-Open `compose.yaml` and adjust the environment variables. See [the enviornment variables](#enviroment-variables) section for more details.
+Open `compose.yaml` and adjust the environment variables. See [the enviornment variables](#environment-variables) section for more details.
 
 Please remember to change the password from "Tempus".
 
