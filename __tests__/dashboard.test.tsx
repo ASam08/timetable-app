@@ -12,27 +12,27 @@ jest.mock("@/lib/actions", () => ({
 
 jest.mock("@/app/ui/dashboard/currentcardclient", () => ({
   __esModule: true,
-  CurrentCardClient: () => <div>CurrentCardClient</div>,
+  default: () => <div>CurrentCardClient</div>,
 }));
 
 jest.mock("@/app/ui/dashboard/nextcardclient", () => ({
   __esModule: true,
-  NextCardClient: () => <div>NextCardClient</div>,
+  default: () => <div>NextCardClient</div>,
 }));
 
 jest.mock("@/app/ui/dashboard/nextbreakcardclient", () => ({
   __esModule: true,
-  NextBreakCardClient: () => <div>NextBreakCardClient</div>,
+  default: () => <div>NextBreakCardClient</div>,
 }));
 
 jest.mock("@/components/ui/dashboard/localdate", () => ({
   __esModule: true,
-  LocalDateDisplay: () => <div>LocalDateDisplay</div>,
+  default: () => <div>LocalDateDisplay</div>,
 }));
 
 jest.mock("@/components/ui/dashboard/localtime", () => ({
   __esModule: true,
-  LocalTimeDisplay: () => <div>LocalTimeDisplay</div>,
+  default: () => <div>LocalTimeDisplay</div>,
 }));
 
 jest.mock("@/lib/db", () => ({
@@ -47,7 +47,7 @@ jest.mock("next/navigation", () => ({
 
 jest.mock("@/app/ui/dashboard/sidenav", () => ({
   __esModule: true,
-  SideNav: () => <div>SideNav</div>,
+  default: () => <div>SideNav</div>,
 }));
 
 jest.mock("@/app/ui/darkmode", () => ({
@@ -64,35 +64,43 @@ describe("DashboardPage", () => {
     jest.clearAllMocks();
   });
 
+  it("renders the Dashboard heading", async () => {
+    mockedAuth.mockResolvedValueOnce({ user: { name: "Test User" } });
+    const result = await DashboardPage();
+    render(result);
+    expect(
+      screen.getByRole("heading", { name: /dashboard/i }),
+    ).toBeInTheDocument();
+  });
+
   it("renders the dashboard page with user name", async () => {
     mockedAuth.mockResolvedValueOnce({ user: { name: "Test User" } });
-
-    await act(async () => {
-      render(<DashboardPage />);
-    });
-
+    const result = await DashboardPage();
+    render(result);
     expect(screen.getByText(/here's what's next/i)).toBeInTheDocument();
     expect(screen.getByText(/Test User/i)).toBeInTheDocument();
   });
 
   it("renders 'Here's' without a name when session has no user name", async () => {
     mockedAuth.mockResolvedValueOnce({ user: { name: null } });
-
-    await act(async () => {
-      render(<DashboardPage />);
-    });
-
+    const result = await DashboardPage();
+    render(result);
     expect(screen.getByText(/here's what's next/i)).toBeInTheDocument();
     expect(screen.queryByText(/Test User/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/null/i)).not.toBeInTheDocument();
+  });
+
+  it("handles missing session gracefully", async () => {
+    mockedAuth.mockResolvedValueOnce(null);
+    const result = await DashboardPage();
+    render(result);
+    expect(screen.getByText(/here's what's next/i)).toBeInTheDocument();
   });
 
   it("renders all dashboard cards", async () => {
     mockedAuth.mockResolvedValueOnce({ user: { name: "Test User" } });
-
-    await act(async () => {
-      render(<DashboardPage />);
-    });
-
+    const result = await DashboardPage();
+    render(result);
     expect(screen.getByText("CurrentCardClient")).toBeInTheDocument();
     expect(screen.getByText("NextBreakCardClient")).toBeInTheDocument();
     expect(screen.getByText("NextCardClient")).toBeInTheDocument();
