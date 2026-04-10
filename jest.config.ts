@@ -33,11 +33,10 @@ const config: Config = {
     "lib/**/*.{ts,tsx}",
     "components/ui/**/*.{ts,tsx}",
     "!components/ui/*.{ts,tsx}",
-    "db/**/*.{ts,tsx}",
     "!**/*.d.ts",
     "!**/node_modules/**",
     "!**/.next/**",
-    "!**/layout.{ts,tsx}",
+    "!app/**/layout.{ts,tsx}",
   ],
 
   // The directory where Jest should output its coverage files
