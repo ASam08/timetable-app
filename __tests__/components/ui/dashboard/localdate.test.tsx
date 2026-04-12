@@ -4,20 +4,16 @@ import LocalDateDisplay from "@/components/ui/dashboard/localdate";
 
 describe("LocalDateDisplay", () => {
   beforeEach(() => {
-    // Replace real timers with Jest's fake timer system
     jest.useFakeTimers();
-    // Fix the date to a known value so tests are predictable
     jest.setSystemTime(new Date("2026-01-15").getTime());
   });
 
   afterEach(() => {
-    // Restore real timers after each test
     jest.useRealTimers();
   });
 
   it("displays the current date on render", () => {
     render(<LocalDateDisplay />);
-    // 15/01/26 is what toLocaleDateString will produce for 2026-01-15
     expect(screen.getByText("15/01/26")).toBeInTheDocument();
   });
 
