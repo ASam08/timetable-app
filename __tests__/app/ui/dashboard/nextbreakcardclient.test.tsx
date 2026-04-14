@@ -61,6 +61,46 @@ describe("NextBreakCardClient", () => {
     expect(screen.getByText(/at 10:30/)).toBeInTheDocument();
     jest.useRealTimers();
   });
+
+  it("handles block with no start_time", async () => {
+    const { fetchNextBreak } = require("@/lib/actions");
+    fetchNextBreak.mockResolvedValue({
+      subject: "Maths",
+      location: "Room 314",
+      end_time: "14:30:00",
+      start_time: null,
+    });
+    await act(async () => {
+      render(<NextBreakCardClient />);
+    });
+    expect(screen.getByText("Next Break")).toBeInTheDocument();
+  });
+
+  it("refetches when block has started", async () => {
+    const { fetchNextBreak } = require("@/lib/actions");
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date("2026-01-15T10:29:00").getTime());
+
+    fetchNextBreak.mockResolvedValue({
+      subject: "Maths",
+      location: "Room 314",
+      start_time: "10:30:00",
+      end_time: "10:30:00",
+    });
+
+    await act(async () => {
+      render(<NextBreakCardClient />);
+    });
+
+    // Advance time past the block start
+    await act(async () => {
+      jest.setSystemTime(new Date("2026-01-15T10:31:00").getTime());
+      jest.advanceTimersByTime(1000);
+    });
+
+    expect(fetchNextBreak).toHaveBeenCalledTimes(2);
+    jest.useRealTimers();
+  });
 });
 
 describe("Next break countdown display", () => {

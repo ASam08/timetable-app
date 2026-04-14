@@ -4,12 +4,7 @@ import { useEffect, useState } from "react";
 import { fetchNextBreak } from "@/lib/actions";
 import { RetreivedTimetableBlocks } from "@/lib/definitions";
 import { LucidePause } from "lucide-react";
-
-function timeToMinutes(time?: string | null): number | null {
-  if (!time) return null;
-  const [h, m] = time.slice(0, 5).split(":").map(Number);
-  return h * 60 + m;
-}
+import { timeToMinutes } from "@/lib/utils";
 
 export default function NextBreakCardClient() {
   const [block, setBlock] = useState<RetreivedTimetableBlocks | null>(null);
@@ -121,7 +116,6 @@ export default function NextBreakCardClient() {
       <LucidePause className="float-right text-yellow-500" />
       <p className="font-bold">Next Break</p>
       <p className="text-sm">
-        {minutesUntilNext === -1 && "Starting now "}
         {minutesUntilNext === 0 && "Starting in less than 1 minute "}
         {minutesUntilNext === 1 && "Starting in 1 minute "}
         {hours === null &&
