@@ -3,6 +3,9 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
 
+const mockFormAction = jest.fn();
+const mockUnhideDow = jest.fn().mockResolvedValue(undefined);
+
 jest.mock("next/link", () => {
   const Link = ({
     href,
@@ -15,11 +18,8 @@ jest.mock("next/link", () => {
   return Link;
 });
 
-const mockAddTimetableBlock = jest.fn();
-const mockUnhideDow = jest.fn().mockResolvedValue(undefined);
-
 jest.mock("@/lib/actions", () => ({
-  addTimetableBlock: (...args: unknown[]) => mockAddTimetableBlock(...args),
+  addTimetableBlock: jest.fn(),
   unhideDow: (...args: unknown[]) => mockUnhideDow(...args),
 }));
 
@@ -95,6 +95,7 @@ jest.mock("@/components/ui/select", () => ({
   }) => (
     <select
       name={name}
+      aria-label={name}
       onChange={(e) => {
         onOpenChange?.();
         onValueChange?.(e.target.value);
@@ -122,7 +123,7 @@ jest.mock("@/components/ui/select", () => ({
 }));
 
 jest.mock("@/components/ui/alert-dialog", () => {
-  const React = jest.requireActual("react");
+  const React = jest.requireActual("react") as typeof import("react");
   const AlertDialogContext = React.createContext<
     ((open: boolean) => void) | undefined
   >(undefined);
@@ -202,29 +203,21 @@ jest.mock("@/components/ui/field", () => ({
   }) => <label htmlFor={htmlFor}>{children}</label>,
 }));
 
-jest.mock("react", () => {
-  const actual = jest.requireActual("react");
-  return {
-    ...actual,
-    useActionState: (
-      _action: unknown,
-      initialState: Record<string, unknown>,
-    ): [Record<string, unknown>, (fd: FormData) => void] => {
-      const [state, setState] = actual.useState(initialState);
-      const formAction = (formData: FormData) => {
-        const result = mockAddTimetableBlock(formData);
-        if (result && typeof result.then === "function") {
-          result.then((r: unknown) => r && setState(r));
-        } else if (result) {
-          setState(result);
-        }
-      };
-      return [state, formAction];
-    },
-  };
-});
-
 import AddTimetableBlock from "@/app/ui/timetable/addtimetableblock";
+
+type Conflict = {
+  id: number;
+  subject: string;
+  start_time: string;
+  end_time: string;
+};
+type ActionState = {
+  message: string;
+  errors: Record<string, string[]>;
+  conflicts: Conflict[];
+};
+
+const initialState: ActionState = { message: "", errors: {}, conflicts: [] };
 
 const defaultSettings: Record<string, string> = {
   monday: "true",
@@ -238,12 +231,16 @@ const defaultSettings: Record<string, string> = {
 
 function renderComponent(
   settings: Record<string, string> | null = defaultSettings,
+  state: ActionState = initialState,
 ) {
+  jest
+    .spyOn(React, "useActionState")
+    .mockReturnValue([state, mockFormAction, false]);
   return render(<AddTimetableBlock settings={settings} />);
 }
 
 async function fillValidForm(user: ReturnType<typeof userEvent.setup>) {
-  await user.selectOptions(screen.getByRole("combobox"), "1"); // Monday
+  await user.selectOptions(screen.getByRole("combobox"), "1");
   await user.type(screen.getByPlaceholderText("e.g. Maths"), "Mathematics");
   await user.type(screen.getByPlaceholderText("e.g. Room 101"), "Room 202");
 }
@@ -251,7 +248,6 @@ async function fillValidForm(user: ReturnType<typeof userEvent.setup>) {
 describe("AddTimetableBlock", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockAddTimetableBlock.mockReturnValue(undefined);
   });
 
   describe("rendering", () => {
@@ -271,8 +267,10 @@ describe("AddTimetableBlock", () => {
 
     it("renders Cancel link pointing to /dashboard/timetable", () => {
       renderComponent();
-      const cancelLink = screen.getByRole("link", { name: /cancel/i });
-      expect(cancelLink).toHaveAttribute("href", "/dashboard/timetable");
+      expect(screen.getByRole("link", { name: /cancel/i })).toHaveAttribute(
+        "href",
+        "/dashboard/timetable",
+      );
     });
 
     it("renders Save changes button", () => {
@@ -328,6 +326,95 @@ describe("AddTimetableBlock", () => {
     });
   });
 
+  describe("server-side errors from action state", () => {
+    it("renders server-side day errors", () => {
+      renderComponent(defaultSettings, {
+        message: "Validation error",
+        errors: { day: ["Day is required"] },
+        conflicts: [],
+      });
+      expect(screen.getByText("Day is required")).toBeInTheDocument();
+    });
+
+    it("renders server-side subject errors", () => {
+      renderComponent(defaultSettings, {
+        message: "",
+        errors: { subject: ["Subject must be at least 2 characters"] },
+        conflicts: [],
+      });
+      expect(
+        screen.getByText("Subject must be at least 2 characters"),
+      ).toBeInTheDocument();
+    });
+
+    it("renders server-side location errors", () => {
+      renderComponent(defaultSettings, {
+        message: "",
+        errors: { location: ["Location is invalid"] },
+        conflicts: [],
+      });
+      expect(screen.getByText("Location is invalid")).toBeInTheDocument();
+    });
+
+    it("renders server-side start_time errors", () => {
+      renderComponent(defaultSettings, {
+        message: "",
+        errors: { start_time: ["Start time is invalid"] },
+        conflicts: [],
+      });
+      expect(screen.getByText("Start time is invalid")).toBeInTheDocument();
+    });
+
+    it("renders server-side end_time errors", () => {
+      renderComponent(defaultSettings, {
+        message: "",
+        errors: { end_time: ["End time is invalid"] },
+        conflicts: [],
+      });
+      expect(screen.getByText("End time is invalid")).toBeInTheDocument();
+    });
+
+    it("renders a server-side time conflict", () => {
+      renderComponent(defaultSettings, {
+        message: "",
+        errors: {},
+        conflicts: [
+          {
+            id: 42,
+            subject: "Physics",
+            start_time: "09:00:00",
+            end_time: "10:00:00",
+          },
+        ],
+      });
+      expect(screen.getByText(/conflict with/i)).toBeInTheDocument();
+      expect(screen.getByText(/Physics \(09:00 - 10:00\)/)).toBeInTheDocument();
+    });
+
+    it("renders multiple conflicts", () => {
+      renderComponent(defaultSettings, {
+        message: "",
+        errors: {},
+        conflicts: [
+          {
+            id: 1,
+            subject: "Physics",
+            start_time: "09:00:00",
+            end_time: "10:00:00",
+          },
+          {
+            id: 2,
+            subject: "Chemistry",
+            start_time: "09:30:00",
+            end_time: "10:30:00",
+          },
+        ],
+      });
+      expect(screen.getByText(/Physics/)).toBeInTheDocument();
+      expect(screen.getByText(/Chemistry/)).toBeInTheDocument();
+    });
+  });
+
   describe("client-side validation", () => {
     it("shows an error when no day is selected", async () => {
       const user = userEvent.setup();
@@ -374,63 +461,6 @@ describe("AddTimetableBlock", () => {
       ).toBeInTheDocument();
     });
 
-    it("shows an error when end time is before start time", async () => {
-      const user = userEvent.setup();
-      renderComponent();
-      await fillValidForm(user);
-
-      const startInput = screen.getByLabelText(/start time/i);
-      const endInput = screen.getByLabelText(/finish time/i);
-
-      await user.clear(startInput);
-      await user.type(startInput, "10:00");
-      await user.clear(endInput);
-      await user.type(endInput, "09:00");
-
-      await user.click(screen.getByRole("button", { name: /save changes/i }));
-      expect(
-        await screen.findByText(/end time must be after start time/i),
-      ).toBeInTheDocument();
-    });
-
-    it("shows an error when end time equals start time", async () => {
-      const user = userEvent.setup();
-      renderComponent();
-      await fillValidForm(user);
-
-      const startInput = screen.getByLabelText(/start time/i);
-      const endInput = screen.getByLabelText(/finish time/i);
-
-      await user.clear(startInput);
-      await user.type(startInput, "10:00");
-      await user.clear(endInput);
-      await user.type(endInput, "10:00");
-
-      await user.click(screen.getByRole("button", { name: /save changes/i }));
-      expect(
-        await screen.findByText(/end time must be after start time/i),
-      ).toBeInTheDocument();
-    });
-
-    it("does NOT show time error when end time is after start time", async () => {
-      const user = userEvent.setup();
-      renderComponent();
-      await fillValidForm(user);
-      // defaults are 09:30 / 10:30 — already valid
-      await user.click(screen.getByRole("button", { name: /save changes/i }));
-      expect(
-        screen.queryByText(/end time must be after start time/i),
-      ).not.toBeInTheDocument();
-    });
-
-    it("does not submit the form when validation fails", async () => {
-      const user = userEvent.setup();
-      renderComponent();
-      // click Save without filling anything
-      await user.click(screen.getByRole("button", { name: /save changes/i }));
-      expect(mockAddTimetableBlock).not.toHaveBeenCalled();
-    });
-
     it("shows an error when start_time is cleared", async () => {
       const user = userEvent.setup();
       renderComponent();
@@ -456,20 +486,63 @@ describe("AddTimetableBlock", () => {
         await screen.findByText(/end time is required/i),
       ).toBeInTheDocument();
     });
+
+    it("shows an error when end time is before start time", async () => {
+      const user = userEvent.setup();
+      renderComponent();
+      await fillValidForm(user);
+      await user.clear(screen.getByLabelText(/start time/i));
+      await user.type(screen.getByLabelText(/start time/i), "10:00");
+      await user.clear(screen.getByLabelText(/finish time/i));
+      await user.type(screen.getByLabelText(/finish time/i), "09:00");
+      await user.click(screen.getByRole("button", { name: /save changes/i }));
+      expect(
+        await screen.findByText(/end time must be after start time/i),
+      ).toBeInTheDocument();
+    });
+
+    it("shows an error when end time equals start time", async () => {
+      const user = userEvent.setup();
+      renderComponent();
+      await fillValidForm(user);
+      await user.clear(screen.getByLabelText(/start time/i));
+      await user.type(screen.getByLabelText(/start time/i), "10:00");
+      await user.clear(screen.getByLabelText(/finish time/i));
+      await user.type(screen.getByLabelText(/finish time/i), "10:00");
+      await user.click(screen.getByRole("button", { name: /save changes/i }));
+      expect(
+        await screen.findByText(/end time must be after start time/i),
+      ).toBeInTheDocument();
+    });
+
+    it("does NOT show time error when end time is after start time", async () => {
+      const user = userEvent.setup();
+      renderComponent();
+      await fillValidForm(user);
+      await user.click(screen.getByRole("button", { name: /save changes/i }));
+      expect(
+        screen.queryByText(/end time must be after start time/i),
+      ).not.toBeInTheDocument();
+    });
+
+    it("does not submit the form when validation fails", async () => {
+      const user = userEvent.setup();
+      renderComponent();
+      await user.click(screen.getByRole("button", { name: /save changes/i }));
+      expect(mockFormAction).not.toHaveBeenCalled();
+    });
   });
 
   describe("clearing client errors", () => {
     it("clears the subject error when the subject input changes", async () => {
       const user = userEvent.setup();
       renderComponent();
-      // Trigger the subject error
       await user.selectOptions(screen.getByRole("combobox"), "1");
       await user.type(screen.getByPlaceholderText("e.g. Room 101"), "101");
       await user.click(screen.getByRole("button", { name: /save changes/i }));
       expect(
         await screen.findByText(/subject is required/i),
       ).toBeInTheDocument();
-      // Now type in the subject field, error should disappear
       await user.type(screen.getByPlaceholderText("e.g. Maths"), "M");
       expect(
         screen.queryByText(/subject is required/i),
@@ -495,22 +568,16 @@ describe("AddTimetableBlock", () => {
       const user = userEvent.setup();
       renderComponent();
       await fillValidForm(user);
-
-      const startInput = screen.getByLabelText(/start time/i);
-      const endInput = screen.getByLabelText(/finish time/i);
-      await user.clear(startInput);
-      await user.type(startInput, "11:00");
-      await user.clear(endInput);
-      await user.type(endInput, "10:00");
-
+      await user.clear(screen.getByLabelText(/start time/i));
+      await user.type(screen.getByLabelText(/start time/i), "11:00");
+      await user.clear(screen.getByLabelText(/finish time/i));
+      await user.type(screen.getByLabelText(/finish time/i), "10:00");
       await user.click(screen.getByRole("button", { name: /save changes/i }));
       expect(
         await screen.findByText(/end time must be after start time/i),
       ).toBeInTheDocument();
-
-      // Changing start should clear the end_time error too
-      await user.clear(startInput);
-      await user.type(startInput, "09:00");
+      await user.clear(screen.getByLabelText(/start time/i));
+      await user.type(screen.getByLabelText(/start time/i), "09:00");
       expect(
         screen.queryByText(/end time must be after start time/i),
       ).not.toBeInTheDocument();
@@ -533,14 +600,13 @@ describe("AddTimetableBlock", () => {
   });
 
   describe("hidden-day AlertDialog", () => {
-    it("shows the AlertDialog when a hidden day (Saturday) is selected with a valid form", async () => {
+    it("shows the AlertDialog when a hidden day is selected with a valid form", async () => {
       const user = userEvent.setup();
       renderComponent({ ...defaultSettings, saturday: "false" });
-      await user.selectOptions(screen.getByRole("combobox"), "6"); // Saturday
+      await user.selectOptions(screen.getByRole("combobox"), "6");
       await user.type(screen.getByPlaceholderText("e.g. Maths"), "Maths");
       await user.type(screen.getByPlaceholderText("e.g. Room 101"), "101");
       await user.click(screen.getByRole("button", { name: /save changes/i }));
-
       expect(await screen.findByRole("alertdialog")).toBeInTheDocument();
       expect(screen.getByText(/saturday is hidden/i)).toBeInTheDocument();
     });
@@ -548,9 +614,8 @@ describe("AddTimetableBlock", () => {
     it("does NOT show the AlertDialog for a visible day (Monday)", async () => {
       const user = userEvent.setup();
       renderComponent();
-      await fillValidForm(user); // selects Monday which is visible
+      await fillValidForm(user);
       await user.click(screen.getByRole("button", { name: /save changes/i }));
-
       expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
     });
 
@@ -561,14 +626,12 @@ describe("AddTimetableBlock", () => {
       await user.type(screen.getByPlaceholderText("e.g. Maths"), "Maths");
       await user.type(screen.getByPlaceholderText("e.g. Room 101"), "101");
       await user.click(screen.getByRole("button", { name: /save changes/i }));
-
       await screen.findByRole("alertdialog");
       await user.click(screen.getByRole("button", { name: /yes, unhide it/i }));
-
       await waitFor(() =>
         expect(mockUnhideDow).toHaveBeenCalledWith("saturday"),
       );
-      await waitFor(() => expect(mockAddTimetableBlock).toHaveBeenCalled());
+      await waitFor(() => expect(mockFormAction).toHaveBeenCalled());
     });
 
     it("submits without unhideDow when 'No, leave it hidden' is clicked", async () => {
@@ -578,14 +641,12 @@ describe("AddTimetableBlock", () => {
       await user.type(screen.getByPlaceholderText("e.g. Maths"), "Maths");
       await user.type(screen.getByPlaceholderText("e.g. Room 101"), "101");
       await user.click(screen.getByRole("button", { name: /save changes/i }));
-
       await screen.findByRole("alertdialog");
       await user.click(
         screen.getByRole("button", { name: /no, leave it hidden/i }),
       );
-
       expect(mockUnhideDow).not.toHaveBeenCalled();
-      await waitFor(() => expect(mockAddTimetableBlock).toHaveBeenCalled());
+      await waitFor(() => expect(mockFormAction).toHaveBeenCalled());
     });
 
     it("closes the AlertDialog and does NOT submit when Cancel is clicked", async () => {
@@ -595,24 +656,20 @@ describe("AddTimetableBlock", () => {
       await user.type(screen.getByPlaceholderText("e.g. Maths"), "Maths");
       await user.type(screen.getByPlaceholderText("e.g. Room 101"), "101");
       await user.click(screen.getByRole("button", { name: /save changes/i }));
-
       const dialog = await screen.findByRole("alertdialog");
       await user.click(within(dialog).getByRole("button", { name: /cancel/i }));
-
       expect(mockUnhideDow).not.toHaveBeenCalled();
-      expect(mockAddTimetableBlock).not.toHaveBeenCalled();
+      expect(mockFormAction).not.toHaveBeenCalled();
       expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
     });
 
     it("uses defaultDaySettings when settings prop is null", async () => {
       const user = userEvent.setup();
-      // null settings = falls back to defaultDaySettings where saturday = false
       renderComponent(null);
-      await user.selectOptions(screen.getByRole("combobox"), "6"); // Saturday
+      await user.selectOptions(screen.getByRole("combobox"), "6");
       await user.type(screen.getByPlaceholderText("e.g. Maths"), "Maths");
       await user.type(screen.getByPlaceholderText("e.g. Room 101"), "101");
       await user.click(screen.getByRole("button", { name: /save changes/i }));
-
       expect(await screen.findByRole("alertdialog")).toBeInTheDocument();
     });
 
@@ -625,138 +682,7 @@ describe("AddTimetableBlock", () => {
       await user.type(screen.getByPlaceholderText("e.g. Maths"), "Maths");
       await user.type(screen.getByPlaceholderText("e.g. Room 101"), "101");
       await user.click(screen.getByRole("button", { name: /save changes/i }));
-
       expect(await screen.findByRole("alertdialog")).toBeInTheDocument();
-    });
-  });
-
-  describe("server-side errors from action state", () => {
-    /**
-     * To simulate server errors we re-implement useActionState so it can
-     * receive a mock return value from mockAddTimetableBlock.
-     */
-    it("renders server-side day errors", async () => {
-      mockAddTimetableBlock.mockReturnValue({
-        message: "Validation error",
-        errors: { day: ["Day is required"] },
-        conflicts: [],
-      });
-      const user = userEvent.setup();
-      renderComponent();
-      await fillValidForm(user);
-      // The mock returns server errors synchronously on submit
-      await user.click(screen.getByRole("button", { name: /save changes/i }));
-      expect(await screen.findByText("Day is required")).toBeInTheDocument();
-    });
-
-    it("renders server-side subject errors", async () => {
-      mockAddTimetableBlock.mockReturnValue({
-        message: "",
-        errors: { subject: ["Subject must be at least 2 characters"] },
-        conflicts: [],
-      });
-      const user = userEvent.setup();
-      renderComponent();
-      await fillValidForm(user);
-      await user.click(screen.getByRole("button", { name: /save changes/i }));
-      expect(
-        await screen.findByText("Subject must be at least 2 characters"),
-      ).toBeInTheDocument();
-    });
-
-    it("renders server-side location errors", async () => {
-      mockAddTimetableBlock.mockReturnValue({
-        message: "",
-        errors: { location: ["Location is invalid"] },
-        conflicts: [],
-      });
-      const user = userEvent.setup();
-      renderComponent();
-      await fillValidForm(user);
-      await user.click(screen.getByRole("button", { name: /save changes/i }));
-      expect(
-        await screen.findByText("Location is invalid"),
-      ).toBeInTheDocument();
-    });
-
-    it("renders server-side start_time errors", async () => {
-      mockAddTimetableBlock.mockReturnValue({
-        message: "",
-        errors: { start_time: ["Start time is invalid"] },
-        conflicts: [],
-      });
-      const user = userEvent.setup();
-      renderComponent();
-      await fillValidForm(user);
-      await user.click(screen.getByRole("button", { name: /save changes/i }));
-      expect(
-        await screen.findByText("Start time is invalid"),
-      ).toBeInTheDocument();
-    });
-
-    it("renders server-side end_time errors", async () => {
-      mockAddTimetableBlock.mockReturnValue({
-        message: "",
-        errors: { end_time: ["End time is invalid"] },
-        conflicts: [],
-      });
-      const user = userEvent.setup();
-      renderComponent();
-      await fillValidForm(user);
-      await user.click(screen.getByRole("button", { name: /save changes/i }));
-      expect(
-        await screen.findByText("End time is invalid"),
-      ).toBeInTheDocument();
-    });
-
-    it("renders server-side time conflicts", async () => {
-      mockAddTimetableBlock.mockReturnValue({
-        message: "",
-        errors: {},
-        conflicts: [
-          {
-            id: 42,
-            subject: "Physics",
-            start_time: "09:00:00",
-            end_time: "10:00:00",
-          },
-        ],
-      });
-      const user = userEvent.setup();
-      renderComponent();
-      await fillValidForm(user);
-      await user.click(screen.getByRole("button", { name: /save changes/i }));
-      expect(await screen.findByText(/conflict with/i)).toBeInTheDocument();
-      expect(
-        await screen.findByText(/Physics \(09:00 - 10:00\)/),
-      ).toBeInTheDocument();
-    });
-
-    it("renders multiple conflicts", async () => {
-      mockAddTimetableBlock.mockReturnValue({
-        message: "",
-        errors: {},
-        conflicts: [
-          {
-            id: 1,
-            subject: "Physics",
-            start_time: "09:00:00",
-            end_time: "10:00:00",
-          },
-          {
-            id: 2,
-            subject: "Chemistry",
-            start_time: "09:30:00",
-            end_time: "10:30:00",
-          },
-        ],
-      });
-      const user = userEvent.setup();
-      renderComponent();
-      await fillValidForm(user);
-      await user.click(screen.getByRole("button", { name: /save changes/i }));
-      expect(await screen.findByText(/Physics/)).toBeInTheDocument();
-      expect(await screen.findByText(/Chemistry/)).toBeInTheDocument();
     });
   });
 
@@ -766,10 +692,8 @@ describe("AddTimetableBlock", () => {
       renderComponent();
       await fillValidForm(user);
       await user.click(screen.getByRole("button", { name: /save changes/i }));
-      await waitFor(() =>
-        expect(mockAddTimetableBlock).toHaveBeenCalledTimes(1),
-      );
-      const formData: FormData = mockAddTimetableBlock.mock.calls[0][0];
+      await waitFor(() => expect(mockFormAction).toHaveBeenCalledTimes(1));
+      const formData: FormData = mockFormAction.mock.calls[0][0];
       expect(formData.get("day_of_week")).toBe("1");
       expect(formData.get("subject")).toBe("Mathematics");
       expect(formData.get("location")).toBe("Room 202");
