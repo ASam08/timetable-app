@@ -74,6 +74,16 @@ beforeEach(() => {
 });
 
 describe("getUserID", () => {
+  let originalAuthOn: string | undefined;
+
+  beforeAll(() => {
+    originalAuthOn = process.env.AUTH_ON;
+  });
+
+  afterEach(() => {
+    process.env.AUTH_ON = originalAuthOn;
+  });
+
   describe("when AUTH_ON is true", () => {
     beforeEach(() => {
       process.env.AUTH_ON = "true";
@@ -122,6 +132,7 @@ describe("getUserID", () => {
       mockFrom.mockRejectedValueOnce(new Error("DB error"));
       const result = await getUserID();
       expect(result).toBeNull();
+      expect(console.error).toHaveBeenCalled();
     });
   });
 });
@@ -144,6 +155,7 @@ describe("getTimetableSets", () => {
     mockLimit.mockRejectedValueOnce(new Error("DB error"));
     const result = await getTimetableSets("user-123");
     expect(result).toEqual([]);
+    expect(console.error).toHaveBeenCalled();
   });
 });
 
@@ -177,6 +189,7 @@ describe("getTimetableBlocks", () => {
     mockWhere.mockRejectedValueOnce(new Error("DB error"));
     const result = await getTimetableBlocks("set-123");
     expect(result).toEqual([]);
+    expect(console.error).toHaveBeenCalled();
   });
 });
 
@@ -273,6 +286,7 @@ describe("getUserSettings", () => {
     mockWhere.mockRejectedValueOnce(new Error("DB error"));
     const result = await getUserSettings("user-123");
     expect(result).toBeNull();
+    expect(console.error).toHaveBeenCalled();
   });
 });
 
@@ -301,5 +315,6 @@ describe("blockConflictCheck", () => {
     mockOrderBy.mockRejectedValueOnce(new Error("DB error"));
     const result = await blockConflictCheck("set-123", 1, "09:00", "10:00");
     expect(result).toBeNull();
+    expect(console.error).toHaveBeenCalled();
   });
 });

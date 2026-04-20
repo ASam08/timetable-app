@@ -167,7 +167,7 @@ export async function getUserSettings(user_id: string) {
     const settings = Object.fromEntries(
       rows.map((row: UserSettings) => [row.setting_key, row.setting_value]),
     );
-    return settings ?? null;
+    return settings;
   } catch (error) {
     console.error("Error fetching user settings:", error);
     return null;
