@@ -17,14 +17,10 @@ import { AuthError } from "next-auth";
 import bcrypt from "bcryptjs";
 import { SignupFormSchema, SignupFormState } from "./signupschema";
 import { dow } from "@/lib/constants";
-import { ConflictBlocks } from "./definitions";
+import { BlockState, SettingsState } from "./definitions";
 import * as schema from "@/db/schema";
 import { sql, eq } from "drizzle-orm";
-
-const toMinutes = (time: string) => {
-  const [hours, minutes] = time.split(":").map(Number);
-  return hours * 60 + minutes;
-};
+import { timeToMinutes } from "./utils";
 
 export async function authenticate(
   prevState: string | undefined,
@@ -147,19 +143,6 @@ export async function createNewTimetableSet(
   revalidatePath("/dashboard/timetable");
   redirect("/dashboard/timetable");
 }
-
-export type BlockState = {
-  errors: {
-    timetable_set_id?: string[];
-    day?: string[];
-    subject?: string[];
-    location?: string[];
-    start_time?: string[];
-    end_time?: string[];
-  };
-  conflicts: ConflictBlocks[];
-  message: string;
-};
 
 const originalTimetableBlockSchema = z.object({
   id: z.string(),
@@ -342,24 +325,18 @@ export async function deleteBlock(id: string) {
   }
 }
 
-export type SettingsState = {
-  errors?: {
-    start_time?: string[];
-    end_time?: string[];
-  };
-  message?: string | null;
-  timestamp?: number;
-};
-
 const settingsSchema = z
   .object({
     start_time: z.string().min(1, "Start time is required"),
     end_time: z.string().min(1, "End time is required"),
   })
-  .refine((data) => toMinutes(data.end_time) > toMinutes(data.start_time), {
-    path: ["end_time"],
-    message: "End time must be after start time",
-  });
+  .refine(
+    (data) => timeToMinutes(data.end_time)! > timeToMinutes(data.start_time)!,
+    {
+      path: ["end_time"],
+      message: "End time must be after start time",
+    },
+  );
 
 export async function settingsSave(
   prevState: SettingsState,

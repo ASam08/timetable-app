@@ -21,11 +21,12 @@ import {
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { addTimetableBlock, BlockState, unhideDow } from "@/lib/actions";
+import { addTimetableBlock, unhideDow } from "@/lib/actions";
 import Link from "next/link";
 import { useState, useActionState, useRef } from "react";
 import { dowKeyValue } from "@/lib/constants";
 import { defaultDaySettings } from "@/lib/defaults";
+import { BlockState } from "@/lib/definitions";
 
 export default function AddTimetableBlock({
   settings,

@@ -10,7 +10,7 @@ import {
   HoverCardContent,
 } from "@/components/ui/hover-card";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { settingsSave, SettingsState } from "@/lib/actions";
+import { settingsSave } from "@/lib/actions";
 import Link from "next/link";
 import { LucideCircleQuestionMark } from "lucide-react";
 import { useActionState, useState, useEffect } from "react";
@@ -19,6 +19,7 @@ import { defaultTimeSettings } from "@/lib/defaults";
 import { dowKeyValue } from "@/lib/constants";
 import { useRouter } from "next/navigation";
 import { dowDefault } from "@/lib/utils";
+import { SettingsState } from "@/lib/definitions";
 
 export default function SettingsFormClient({
   settings,
