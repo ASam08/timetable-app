@@ -18,11 +18,14 @@ describe("LocalTimeDisplay", () => {
 
   it("displays the current time on render", () => {
     render(<LocalTimeDisplay />);
-    const expected = new Date("2026-01-15").toLocaleTimeString([], {
-      hour: "numeric",
-      minute: "2-digit",
-      second: "2-digit",
-    });
+    const expected = new Date("2026-01-15").toLocaleTimeString(
+      navigator.language,
+      {
+        hour: "numeric",
+        minute: "2-digit",
+        second: "2-digit",
+      },
+    );
     expect(screen.getByText(expected)).toBeInTheDocument();
   });
 
@@ -35,7 +38,7 @@ describe("LocalTimeDisplay", () => {
 
     const expected = new Date(
       new Date("2026-01-15").getTime() + 1000,
-    ).toLocaleTimeString([], {
+    ).toLocaleTimeString(navigator.language, {
       hour: "numeric",
       minute: "2-digit",
       second: "2-digit",
