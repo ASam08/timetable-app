@@ -108,7 +108,7 @@ export function SignupForm({
                     />
                   </Field>
                   <Field>
-                    <FieldLabel htmlFor="confirmPpassword">
+                    <FieldLabel htmlFor="confirmPassword">
                       Confirm Password
                     </FieldLabel>
                     <Input
