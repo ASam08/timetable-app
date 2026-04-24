@@ -1,11 +1,10 @@
-import postgres from "postgres";
 import { drizzle } from "drizzle-orm/node-postgres";
 
 const POSTGRES_HOST = process.env.POSTGRES_HOST ?? "db";
 const POSTGRES_PORT = process.env.POSTGRES_PORT ?? "5432";
-const POSTGRES_USER = process.env.POSTGRES_USER ?? "timetable";
-const POSTGRES_PASSWORD = process.env.POSTGRES_PASSWORD ?? "timetable";
-const POSTGRES_DB = process.env.POSTGRES_DB ?? "timetable";
+const POSTGRES_USER = process.env.POSTGRES_USER ?? "tempus";
+const POSTGRES_PASSWORD = process.env.POSTGRES_PASSWORD ?? "tempus";
+const POSTGRES_DB = process.env.POSTGRES_DB ?? "tempus";
 
 if (!POSTGRES_USER || !POSTGRES_PASSWORD) {
   throw new Error(

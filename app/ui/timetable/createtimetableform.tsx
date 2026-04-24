@@ -6,8 +6,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
-const initialState = {};
 export default function CreateTimetable() {
+  const initialState = {};
   const [state, formAction] = useActionState(
     createNewTimetableSet,
     initialState,
@@ -35,13 +35,13 @@ export default function CreateTimetable() {
             id="description"
             name="description"
             placeholder="Add a description"
-          ></Textarea>
+          />
         </div>
       </div>
       <div className="flex flex-row gap-4 py-4">
-        <Link href="/dashboard/timetable">
-          <Button variant="outline">Cancel</Button>
-        </Link>
+        <Button variant="outline" asChild>
+          <Link href="/dashboard/timetable">Cancel</Link>
+        </Button>
         <Button type="submit">Save changes</Button>
       </div>
     </form>

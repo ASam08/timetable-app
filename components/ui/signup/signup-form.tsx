@@ -20,7 +20,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { signup } from "@/lib/actions";
 import { useFormStatus } from "react-dom";
-import { SignupFormState } from "@/lib/signupschema";
+import { SignupFormState } from "@/lib/definitions";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -108,7 +108,7 @@ export function SignupForm({
                     />
                   </Field>
                   <Field>
-                    <FieldLabel htmlFor="confirmPpassword">
+                    <FieldLabel htmlFor="confirmPassword">
                       Confirm Password
                     </FieldLabel>
                     <Input

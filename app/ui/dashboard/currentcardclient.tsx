@@ -4,12 +4,7 @@ import { useEffect, useState } from "react";
 import { fetchCurrentBlock } from "@/lib/actions";
 import { RetreivedTimetableBlocks } from "@/lib/definitions";
 import { LucidePlay } from "lucide-react";
-
-function timeToMinutes(time?: string | null): number | null {
-  if (!time) return null;
-  const [h, m] = time.slice(0, 5).split(":").map(Number);
-  return h * 60 + m;
-}
+import { timeToMinutes } from "@/lib/utils";
 
 export default function CurrentCardClient() {
   const [block, setBlock] = useState<RetreivedTimetableBlocks | null>(null);
@@ -24,18 +19,13 @@ export default function CurrentCardClient() {
     const time = now.toTimeString().slice(0, 8);
 
     const current = await fetchCurrentBlock(dayOfWeek, time);
-    // Distinguish the "no user" sentinel from a valid response of "no current block"
-    if (
-      current &&
-      ((current as any).reason === "no-user" ||
-        (current as any).reason === "no-set")
-    ) {
+
+    if (current && "reason" in current) {
       setFoundUserId(false);
       setLoading(false);
       return;
     }
 
-    // No current block
     if (!current) {
       setBlock(null);
       setEndMinutes(null);
@@ -43,15 +33,8 @@ export default function CurrentCardClient() {
       return;
     }
 
-    setBlock(current as RetreivedTimetableBlocks);
-
-    if ((current as RetreivedTimetableBlocks).end_time) {
-      setEndMinutes(
-        timeToMinutes((current as RetreivedTimetableBlocks).end_time),
-      );
-    } else {
-      setEndMinutes(null);
-    }
+    setBlock(current);
+    setEndMinutes(timeToMinutes(current.end_time));
 
     setLoading(false);
   };

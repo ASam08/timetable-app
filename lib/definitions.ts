@@ -76,3 +76,37 @@ export type ConflictBlocks = {
   start_time: string;
   end_time: string;
 };
+
+export type BlockState = {
+  errors: {
+    timetable_set_id?: string[];
+    day?: string[];
+    subject?: string[];
+    location?: string[];
+    start_time?: string[];
+    end_time?: string[];
+  };
+  conflicts: ConflictBlocks[];
+  message: string;
+};
+
+export type SettingsState = {
+  errors?: {
+    start_time?: string[];
+    end_time?: string[];
+  };
+  message?: string | null;
+  timestamp?: number;
+};
+
+export type SignupFormState =
+  | {
+      errors?: {
+        name?: string[];
+        email?: string[];
+        password?: string[];
+        confirmPassword?: string[];
+      };
+      message?: string;
+    }
+  | undefined;

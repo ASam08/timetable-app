@@ -21,12 +21,12 @@ import {
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { addTimetableBlock, BlockState } from "@/lib/actions";
+import { addTimetableBlock, unhideDow } from "@/lib/actions";
 import Link from "next/link";
 import { useState, useActionState, useRef } from "react";
 import { dowKeyValue } from "@/lib/constants";
 import { defaultDaySettings } from "@/lib/defaults";
-import { unhideDow } from "@/lib/actions";
+import { BlockState } from "@/lib/definitions";
 
 export default function AddTimetableBlock({
   settings,
@@ -114,7 +114,7 @@ export default function AddTimetableBlock({
       </div>
       <div className="grid gap-4">
         <div className="grid gap-3">
-          <Label>Day</Label>
+          <Label htmlFor="day_of_week">Day</Label>
 
           <Select
             name="day_of_week"
@@ -147,7 +147,7 @@ export default function AddTimetableBlock({
           </div>
         </div>
         <div className="grid gap-3">
-          <Label>Subject</Label>
+          <Label htmlFor="subject">Subject</Label>
           <Input
             type="text"
             id="subject"
@@ -168,7 +168,7 @@ export default function AddTimetableBlock({
           </div>
         </div>
         <div className="grid gap-3">
-          <Label>Location</Label>
+          <Label htmlFor="location">Location</Label>
           <Input
             type="text"
             id="location"
@@ -191,7 +191,7 @@ export default function AddTimetableBlock({
         <div className="flex grid-cols-3 gap-8">
           <div className="grid gap-3">
             <Field className="flex">
-              <FieldLabel htmlFor="start-time-picker">Start Time</FieldLabel>
+              <FieldLabel htmlFor="start_time">Start Time</FieldLabel>
               <Input
                 type="time"
                 id="start_time"
@@ -221,7 +221,7 @@ export default function AddTimetableBlock({
           </div>
           <div className="grid gap-3">
             <Field className="flex">
-              <FieldLabel htmlFor="finish-time-picker">Finish Time</FieldLabel>
+              <FieldLabel htmlFor="end_time">Finish Time</FieldLabel>
               <Input
                 type="time"
                 id="end_time"
@@ -268,17 +268,14 @@ export default function AddTimetableBlock({
         <Button
           type="button"
           onClick={() => {
-            const form = formRef.current;
-            if (!form) return;
-
-            const formData = new FormData(form);
+            const formData = new FormData(formRef.current!);
             const isValid = validateForm(formData);
             if (!isValid) return;
 
             if (dowHidden) {
               setShowDowAlertDialog(true);
             } else {
-              formRef.current?.requestSubmit();
+              formRef.current!.requestSubmit();
             }
           }}
         >
