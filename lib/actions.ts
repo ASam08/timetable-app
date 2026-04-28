@@ -12,40 +12,35 @@ import {
   blockConflictCheck,
 } from "@/lib/data";
 import { sqlConn } from "@/lib/db";
-import { signIn } from "@/auth";
-import { AuthError } from "next-auth";
-import bcrypt from "bcryptjs";
 import { dow } from "@/lib/constants";
 import { BlockState, SettingsState, SignupFormState } from "@/lib/definitions";
 import * as schema from "@/db/schema";
 import { sql, eq } from "drizzle-orm";
 import { timeToMinutes } from "@/lib/utils";
+import { authClient } from "@/lib/auth-client";
 
 export async function authenticate(
   prevState: string | undefined,
   formData: FormData,
 ) {
-  try {
-    await signIn("credentials", formData);
-  } catch (error) {
-    if (error instanceof AuthError) {
-      if (error.cause?.type === "AccountNotEnabled") {
-        console.warn(
-          "Account not enabled error encountered during authentication.",
-        );
-        return "Your account has not been enabled yet.";
-      }
+  const email = formData.get("email") as string;
+  const password = formData.get("password") as string;
 
-      switch (error.type) {
-        case "CredentialsSignin":
-          return "Invalid credentials.";
-        case "CallbackRouteError":
-          return "An error occurred during authentication.";
-        default:
-          return "Something went wrong.";
-      }
+  const { error } = await authClient.signIn.email({
+    email,
+    password,
+    callbackURL: "/dashboard",
+  });
+
+  if (error) {
+    if (error.code === "INVALID_EMAIL_OR_PASSWORD") {
+      return "Invalid credentials.";
     }
-    throw error;
+    if (error.code === "USER_BANNED") {
+      // The databaseHook in lib/auth.ts sets banned=true when APPROVE_SIGNUPS=true.
+      return "Your account has not been approved yet. Please contact the administrator.";
+    }
+    return "Something went wrong.";
   }
 }
 
@@ -85,23 +80,18 @@ export async function signup(
     };
   }
 
-  let accountEnabled: boolean;
-  if (process.env.APPROVE_SIGNUPS?.toLowerCase() === "true") {
-    accountEnabled = false;
-  } else {
-    accountEnabled = true;
-  }
   const { name, email, password } = validatedFields.data;
-  const hashedPassword = await bcrypt.hash(password, 10);
 
-  try {
-    await sqlConn.insert(schema.users).values({
-      name: name,
-      email: email,
-      password: hashedPassword,
-      accountEnabled: accountEnabled,
-    });
-  } catch {
+  const { error } = await authClient.signUp.email({
+    name,
+    email,
+    password,
+  });
+
+  if (error) {
+    if (error.code === "USER_ALREADY_EXISTS") {
+      return { message: "An account with this email already exists." };
+    }
     return { message: "Failed to create account." };
   }
 

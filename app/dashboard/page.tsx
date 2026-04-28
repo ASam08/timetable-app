@@ -3,11 +3,18 @@ import LocalTimeDisplay from "@/components/ui/dashboard/localtime";
 import CurrentCardClient from "@/app/ui/dashboard/currentcardclient";
 import NextCardClient from "../ui/dashboard/nextcardclient";
 import NextBreakCardClient from "../ui/dashboard/nextbreakcardclient";
-import { auth } from "@/auth";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 export default async function DashboardPage() {
-  const session = await auth();
-  // console.log("SESSION:", session);
+  const authOn = process.env.AUTH_ON?.toLowerCase() === "true";
+
+  let session = null;
+  if (authOn) {
+    session = await auth.api.getSession({
+      headers: await headers(),
+    });
+  }
 
   return (
     <div className="flex h-full max-w-screen flex-col px-3 py-4 md:px-2">
@@ -16,8 +23,7 @@ export default async function DashboardPage() {
       </h1>
       <div className="flex flex-row">
         <div className="self-start-safe flex grow text-gray-600 dark:text-gray-400">
-          {" "}
-          {session?.user.name ? `${session.user.name}, h` : "H"}ere's what's
+          {session?.user?.name ? `${session.user.name}, h` : "H"}ere's what's
           next on your schedule!
         </div>
         <div className="flex grow flex-col items-end-safe self-end-safe">
