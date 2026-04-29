@@ -17,33 +17,7 @@ import { BlockState, SettingsState, SignupFormState } from "@/lib/definitions";
 import * as schema from "@/db/schema";
 import { sql, eq } from "drizzle-orm";
 import { timeToMinutes } from "@/lib/utils";
-import { authClient } from "@/lib/auth-client";
 import { auth } from "@/lib/auth";
-
-export async function authenticate(
-  prevState: string | undefined,
-  formData: FormData,
-) {
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
-
-  try {
-    await auth.api.signInEmail({
-      body: { email, password },
-    });
-  } catch (error: any) {
-    console.log("auth error:", error); //TODO: remove
-    if (error?.body?.code === "INVALID_EMAIL_OR_PASSWORD") {
-      return "Invalid credentials.";
-    }
-    if (error?.body?.code === "BANNED_USER") {
-      // The databaseHook in lib/auth.ts sets banned=true when APPROVE_SIGNUPS=true.
-      return "Your account has not been approved yet. Please contact the administrator.";
-    }
-    return "Something went wrong.";
-  }
-  redirect("/dashboard");
-}
 
 const SignupFormSchema = z
   .object({

@@ -36,14 +36,12 @@ export const users = pgTable(
     id: uuid().defaultRandom().primaryKey().notNull(),
     name: varchar({ length: 255 }).notNull(),
     email: text().notNull(),
-    password: text().notNull(),
     createdAt: timestamp("created_at", { mode: "string" }).default(
       sql`CURRENT_TIMESTAMP`,
     ),
     updatedAt: timestamp("updated_at", { mode: "string" }).default(
       sql`CURRENT_TIMESTAMP`,
     ),
-    accountEnabled: boolean("account_enabled").default(true).notNull(),
     emailVerified: boolean("email_verified").default(false).notNull(),
     image: text("image"),
     role: text("role").default("user"),

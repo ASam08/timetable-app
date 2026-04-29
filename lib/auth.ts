@@ -63,17 +63,12 @@ export const auth = betterAuth({
       updatedAt: "updatedAt",
       emailVerified: "emailVerified",
     },
-    additionalFields: {
-      accountEnabled: {
-        type: "boolean",
-        defaultValue: true,
-        fieldName: "accountEnabled",
-      },
-    },
   },
 
   advanced: {
-    generateId: () => crypto.randomUUID(),
+    database: {
+      generateId: () => crypto.randomUUID(),
+    },
     useSecureCookies: process.env.NODE_ENV === "production",
   },
 
