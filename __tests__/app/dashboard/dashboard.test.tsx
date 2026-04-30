@@ -1,9 +1,16 @@
 import "@testing-library/jest-dom";
 import { render, screen } from "@testing-library/react";
 
-jest.mock("@/auth", () => ({
-  __esModule: true,
-  auth: jest.fn(),
+jest.mock("@/lib/auth", () => ({
+  auth: {
+    api: {
+      getSession: jest.fn(),
+    },
+  },
+}));
+
+jest.mock("next/headers", () => ({
+  headers: jest.fn().mockResolvedValue(new Headers()),
 }));
 
 jest.mock("@/lib/actions", () => ({
@@ -55,7 +62,7 @@ jest.mock("@/app/ui/darkmode", () => ({
   ModeToggle: () => <div>DarkModeToggle</div>,
 }));
 
-const mockedAuth = require("@/auth").auth;
+const mockedAuth = require("@/lib/auth").auth.api.getSession;
 
 import DashboardPage from "@/app/dashboard/page";
 
