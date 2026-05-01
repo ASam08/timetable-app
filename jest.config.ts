@@ -41,6 +41,8 @@ const config: Config = {
     "!lib/constants.ts",
     "!lib/definitions.ts",
     "!lib/defaults.ts",
+    "!lib/auth.ts",
+    "!lib/auth-client.ts",
   ],
 
   // The directory where Jest should output its coverage files

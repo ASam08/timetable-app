@@ -1,54 +1,72 @@
 import "@testing-library/jest-dom";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { toast } from "sonner";
 
+const mockPush = jest.fn();
+
 jest.mock("next/navigation", () => ({
-  useRouter: jest.fn(() => ({ push: jest.fn() })),
+  useRouter: jest.fn(() => ({ push: mockPush })),
 }));
 
-jest.mock("@/lib/actions", () => ({
-  signup: jest.fn(),
+jest.mock("@/lib/auth-client", () => ({
+  authClient: {
+    signUp: {
+      email: jest.fn(),
+    },
+  },
 }));
 
 jest.mock("sonner", () => ({
   toast: { success: jest.fn(), error: jest.fn() },
 }));
 
-jest.mock("react-dom", () => ({
-  ...jest.requireActual("react-dom"),
-  useFormStatus: jest.fn(() => ({ pending: false })),
-}));
-
-const mockFormAction = jest.fn();
-let mockState: SignupFormState | undefined = undefined;
-
-jest.mock("react", () => ({
-  ...jest.requireActual("react"),
-  useActionState: jest.fn(() => [mockState, mockFormAction]),
-}));
-
 import { SignupForm } from "@/components/ui/signup/signup-form";
-import { SignupFormState } from "@/lib/definitions";
-import { useRouter } from "next/navigation";
-import { useFormStatus } from "react-dom";
+import { authClient } from "@/lib/auth-client";
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockState = undefined;
-  (useFormStatus as jest.Mock).mockReturnValue({ pending: false });
-  (useRouter as jest.Mock).mockReturnValue({ push: jest.fn() });
+  mockPush.mockReset();
+  (authClient.signUp.email as jest.Mock).mockResolvedValue({ error: null });
 });
+
+const validFormData = {
+  name: "John Doe",
+  email: "john@example.com",
+  password: "Password1!",
+  confirmPassword: "Password1!",
+};
+
+// Uses fireEvent throughout so that JSDOM's native constraint validation
+// (required, type="email") does not cancel the submit event before
+// handleSubmit runs. This lets the component's own Zod validation execute.
+function fillAndSubmit(overrides: Partial<typeof validFormData> = {}) {
+  const data = { ...validFormData, ...overrides };
+
+  fireEvent.change(screen.getByLabelText(/^name$/i), {
+    target: { value: data.name },
+  });
+  fireEvent.change(screen.getByLabelText(/^email$/i), {
+    target: { value: data.email },
+  });
+  fireEvent.change(screen.getByLabelText(/^password$/i), {
+    target: { value: data.password },
+  });
+  fireEvent.change(screen.getByLabelText(/confirm password/i), {
+    target: { value: data.confirmPassword },
+  });
+  fireEvent.submit(document.querySelector("form")!);
+}
 
 describe("SignupForm", () => {
   describe("Form fields", () => {
     it("renders the name input", () => {
       render(<SignupForm />);
-      expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/^name$/i)).toBeInTheDocument();
     });
 
     it("renders the email input", () => {
       render(<SignupForm />);
-      expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/^email$/i)).toBeInTheDocument();
     });
 
     it("renders the password input", () => {
@@ -75,49 +93,24 @@ describe("SignupForm", () => {
       ).toBeInTheDocument();
     });
 
-    it("applies custom className to the wrapper", () => {
+    it("renders terms of service and privacy policy links", () => {
+      render(<SignupForm />);
+      expect(
+        screen.getByRole("link", { name: /terms of service/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("link", { name: /privacy policy/i }),
+      ).toBeInTheDocument();
+    });
+
+    it("applies custom className to the wrapper alongside default classes", () => {
       const { container } = render(<SignupForm className="custom-class" />);
       expect(container.firstChild).toHaveClass("custom-class");
       expect(container.firstChild).toHaveClass("flex");
     });
-  });
 
-  describe("Error handling", () => {
-    it("shows name error when state contains name errors", () => {
-      mockState = { errors: { name: ["Name is required"] } };
+    it("does not show any error messages on initial render", () => {
       render(<SignupForm />);
-      expect(screen.getByText("Name is required")).toBeInTheDocument();
-    });
-
-    it("shows email error when state contains email errors", () => {
-      mockState = { errors: { email: ["Invalid email address"] } };
-      render(<SignupForm />);
-      expect(screen.getByText("Invalid email address")).toBeInTheDocument();
-    });
-
-    it("shows password errors when state contains password errors", () => {
-      mockState = { errors: { password: ["at least 8 characters"] } };
-      render(<SignupForm />);
-      const matches = screen.getAllByText(/at least 8 characters/i);
-      // One LI from the dynamic error list, one from the static FieldDescription
-      expect(matches).toHaveLength(2);
-      expect(matches[0].tagName).toBe("LI");
-    });
-
-    it("shows confirmPassword error alongside password errors", () => {
-      mockState = {
-        errors: {
-          password: ["at least 8 characters"],
-          confirmPassword: ["Passwords do not match"],
-        },
-      };
-      render(<SignupForm />);
-      expect(screen.getByText("Passwords do not match")).toBeInTheDocument();
-    });
-
-    it("does not show any errors when state is undefined", () => {
-      render(<SignupForm />);
-      // These strings only appear in dynamic error renders, not in static hints
       expect(screen.queryByText("Name is required")).not.toBeInTheDocument();
       expect(
         screen.queryByText("Invalid email address"),
@@ -125,33 +118,109 @@ describe("SignupForm", () => {
       expect(
         screen.queryByText(/passwords do not match/i),
       ).not.toBeInTheDocument();
-      // The error list wrapper ("Password must:") only renders when there are password errors
       expect(screen.queryByText("Password must:")).not.toBeInTheDocument();
     });
   });
 
-  describe("Pending state", () => {
-    it("disables the button and shows loading text while pending", () => {
-      (useFormStatus as jest.Mock).mockReturnValue({ pending: true });
+  describe("Client-side validation", () => {
+    it("shows name required error when name is empty", async () => {
       render(<SignupForm />);
-      const button = screen.getByRole("button", { name: /creating/i });
-      expect(button).toBeDisabled();
+      fillAndSubmit({ name: "" });
+
+      await waitFor(() => {
+        expect(screen.getByText("Name is required")).toBeInTheDocument();
+      });
+      expect(authClient.signUp.email).not.toHaveBeenCalled();
     });
 
-    it("shows 'Create Account' and is enabled when not pending", () => {
+    it("shows invalid email error when email is malformed", async () => {
       render(<SignupForm />);
-      const button = screen.getByRole("button", { name: /create account/i });
-      expect(button).not.toBeDisabled();
+      fillAndSubmit({ email: "not-an-email" });
+
+      await waitFor(() => {
+        expect(screen.getByText("Invalid email address")).toBeInTheDocument();
+      });
+      expect(authClient.signUp.email).not.toHaveBeenCalled();
+    });
+
+    it("shows password length error when password is too short", async () => {
+      render(<SignupForm />);
+      fillAndSubmit({ password: "Ab1!", confirmPassword: "Ab1!" });
+
+      await waitFor(() => {
+        expect(screen.getByText("Password must:")).toBeInTheDocument();
+        // The phrase also appears in the static FieldDescription hint below the
+        // inputs, so use getAllByText and assert the dynamic <li> is present.
+        const matches = screen.getAllByText(/be at least 8 characters long/i);
+        expect(matches.some((el) => el.tagName === "LI")).toBe(true);
+      });
+      expect(authClient.signUp.email).not.toHaveBeenCalled();
+    });
+
+    it("shows password letter error when password has no letters", async () => {
+      render(<SignupForm />);
+      fillAndSubmit({ password: "12345678!", confirmPassword: "12345678!" });
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(/contain at least one letter/i),
+        ).toBeInTheDocument();
+      });
+      expect(authClient.signUp.email).not.toHaveBeenCalled();
+    });
+
+    it("shows password number error when password has no numbers", async () => {
+      render(<SignupForm />);
+      fillAndSubmit({ password: "Password!", confirmPassword: "Password!" });
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(/contain at least one number/i),
+        ).toBeInTheDocument();
+      });
+      expect(authClient.signUp.email).not.toHaveBeenCalled();
+    });
+
+    it("shows special character error when password has no special characters", async () => {
+      render(<SignupForm />);
+      fillAndSubmit({ password: "Password1", confirmPassword: "Password1" });
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(/contain at least one special character/i),
+        ).toBeInTheDocument();
+      });
+      expect(authClient.signUp.email).not.toHaveBeenCalled();
+    });
+
+    it("shows confirm password mismatch error", async () => {
+      render(<SignupForm />);
+      fillAndSubmit({ confirmPassword: "DifferentPassword1!" });
+
+      await waitFor(() => {
+        expect(screen.getByText("Passwords do not match")).toBeInTheDocument();
+      });
+      expect(authClient.signUp.email).not.toHaveBeenCalled();
     });
   });
 
-  describe("Success state", () => {
-    it("shows success toast and redirects to /login on success", async () => {
-      const mockPush = jest.fn();
-      (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
-
-      mockState = { message: "success" };
+  describe("Successful signup", () => {
+    it("calls authClient.signUp.email with correct data", async () => {
       render(<SignupForm />);
+      fillAndSubmit();
+
+      await waitFor(() => {
+        expect(authClient.signUp.email).toHaveBeenCalledWith({
+          name: validFormData.name,
+          email: validFormData.email,
+          password: validFormData.password,
+        });
+      });
+    });
+
+    it("shows success toast and redirects to /login", async () => {
+      render(<SignupForm />);
+      fillAndSubmit();
 
       await waitFor(() => {
         expect(toast.success).toHaveBeenCalledWith(
@@ -159,6 +228,90 @@ describe("SignupForm", () => {
           expect.objectContaining({ position: "top-center" }),
         );
         expect(mockPush).toHaveBeenCalledWith("/login");
+      });
+    });
+  });
+
+  describe("Error responses from authClient", () => {
+    it("shows specific message when email already exists", async () => {
+      (authClient.signUp.email as jest.Mock).mockResolvedValue({
+        error: { code: "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL" },
+      });
+
+      render(<SignupForm />);
+      fillAndSubmit();
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("An account with this email already exists."),
+        ).toBeInTheDocument();
+      });
+      expect(toast.success).not.toHaveBeenCalled();
+      expect(mockPush).not.toHaveBeenCalled();
+    });
+
+    it("shows generic error message for unknown error codes", async () => {
+      (authClient.signUp.email as jest.Mock).mockResolvedValue({
+        error: { code: "SOME_OTHER_ERROR" },
+      });
+
+      render(<SignupForm />);
+      fillAndSubmit();
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Failed to create account."),
+        ).toBeInTheDocument();
+      });
+      expect(toast.success).not.toHaveBeenCalled();
+      expect(mockPush).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("Pending state", () => {
+    it("disables the button and shows loading text while the request is in flight", async () => {
+      let resolveSignup!: (value: { error: null }) => void;
+      (authClient.signUp.email as jest.Mock).mockReturnValue(
+        new Promise((res) => {
+          resolveSignup = res;
+        }),
+      );
+
+      render(<SignupForm />);
+      fillAndSubmit();
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /creating/i }),
+        ).toBeDisabled();
+      });
+
+      resolveSignup({ error: null });
+    });
+
+    it("re-enables the button after a validation failure", async () => {
+      render(<SignupForm />);
+      fillAndSubmit({ name: "" });
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /create account/i }),
+        ).not.toBeDisabled();
+      });
+    });
+
+    it("re-enables the button after an authClient error", async () => {
+      (authClient.signUp.email as jest.Mock).mockResolvedValue({
+        error: { code: "SOME_OTHER_ERROR" },
+      });
+
+      render(<SignupForm />);
+      fillAndSubmit();
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /create account/i }),
+        ).not.toBeDisabled();
       });
     });
   });
