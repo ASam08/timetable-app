@@ -12,101 +12,11 @@ import {
   blockConflictCheck,
 } from "@/lib/data";
 import { sqlConn } from "@/lib/db";
-import { signIn } from "@/auth";
-import { AuthError } from "next-auth";
-import bcrypt from "bcryptjs";
 import { dow } from "@/lib/constants";
-import { BlockState, SettingsState, SignupFormState } from "@/lib/definitions";
+import { BlockState, SettingsState } from "@/lib/definitions";
 import * as schema from "@/db/schema";
 import { sql, eq } from "drizzle-orm";
 import { timeToMinutes } from "@/lib/utils";
-
-export async function authenticate(
-  prevState: string | undefined,
-  formData: FormData,
-) {
-  try {
-    await signIn("credentials", formData);
-  } catch (error) {
-    if (error instanceof AuthError) {
-      if (error.cause?.type === "AccountNotEnabled") {
-        console.warn(
-          "Account not enabled error encountered during authentication.",
-        );
-        return "Your account has not been enabled yet.";
-      }
-
-      switch (error.type) {
-        case "CredentialsSignin":
-          return "Invalid credentials.";
-        case "CallbackRouteError":
-          return "An error occurred during authentication.";
-        default:
-          return "Something went wrong.";
-      }
-    }
-    throw error;
-  }
-}
-
-const SignupFormSchema = z
-  .object({
-    name: z.string().min(1, { error: "Name is required" }).trim(),
-    email: z.email({ error: "Invalid email address" }).trim(),
-    password: z
-      .string()
-      .min(8, { error: "Be at least 8 characters long" })
-      .regex(/[a-zA-Z]/, { error: "Contain at least one letter." })
-      .regex(/[0-9]/, { error: "Contain at least one number." })
-      .regex(/[^a-zA-Z0-9]/, {
-        error: "Contain at least one special character.",
-      }),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-  });
-
-export async function signup(
-  state: SignupFormState,
-  formData: FormData,
-): Promise<SignupFormState> {
-  const validatedFields = SignupFormSchema.safeParse({
-    name: formData.get("name"),
-    email: formData.get("email"),
-    password: formData.get("password"),
-    confirmPassword: formData.get("confirmPassword"),
-  });
-
-  if (!validatedFields.success) {
-    return {
-      errors: validatedFields.error.flatten().fieldErrors,
-    };
-  }
-
-  let accountEnabled: boolean;
-  if (process.env.APPROVE_SIGNUPS?.toLowerCase() === "true") {
-    accountEnabled = false;
-  } else {
-    accountEnabled = true;
-  }
-  const { name, email, password } = validatedFields.data;
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  try {
-    await sqlConn.insert(schema.users).values({
-      name: name,
-      email: email,
-      password: hashedPassword,
-      accountEnabled: accountEnabled,
-    });
-  } catch {
-    return { message: "Failed to create account." };
-  }
-
-  return { message: "success" };
-}
 
 const TimetableSetSchema = z.object({
   id: z.string(),

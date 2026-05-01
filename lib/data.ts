@@ -6,14 +6,17 @@ import {
   ConflictBlocks,
 } from "@/lib/definitions";
 import { sqlConn } from "@/lib/db";
-import { auth } from "@/auth";
 import * as schema from "@/db/schema";
 import { sql, and, eq, gt, gte, lt, lte, isNull } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 export async function getUserID() {
   if (process.env.AUTH_ON === "true") {
-    const session = await auth();
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
     const user_id = session?.user?.id;
     if (!user_id) return null;
     return user_id;

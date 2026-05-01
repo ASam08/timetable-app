@@ -22,20 +22,6 @@ jest.mock("next/navigation", () => ({
   }),
 }));
 
-jest.mock("@/auth", () => ({ signIn: jest.fn() }));
-
-jest.mock("next-auth", () => ({
-  AuthError: class AuthError extends Error {
-    type: string;
-    cause?: { type?: string };
-    constructor(type: string, cause?: { type?: string }) {
-      super(type);
-      this.type = type;
-      this.cause = cause;
-    }
-  },
-}));
-
 jest.mock("bcryptjs", () => ({
   hash: jest.fn().mockResolvedValue("hashed_pw"),
 }));
@@ -72,8 +58,6 @@ jest.mock("@/lib/utils", () => ({
 }));
 
 import {
-  authenticate,
-  signup,
   createNewTimetableSet,
   addTimetableBlock,
   fetchCurrentBlock,
@@ -85,8 +69,6 @@ import {
   updateSettings,
 } from "@/lib/actions";
 
-import { signIn } from "@/auth";
-import { AuthError } from "next-auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { sqlConn } from "@/lib/db";
@@ -98,7 +80,6 @@ import {
   getNextBreak,
   blockConflictCheck,
 } from "@/lib/data";
-const mockSignIn = signIn as jest.Mock;
 const mockRevalidatePath = revalidatePath as jest.Mock;
 const mockRedirect = redirect as jest.Mock;
 const mockGetUserID = getUserID as jest.Mock;
@@ -136,123 +117,6 @@ function makeFormData(entries: Record<string, string>): FormData {
 }
 
 describe("ActionsTests", () => {
-  describe("authenticate", () => {
-    const formData = makeFormData({ email: "a@b.com", password: "pass" });
-
-    it("calls signIn and returns undefined on success", async () => {
-      mockSignIn.mockResolvedValueOnce(undefined);
-      const result = await authenticate(undefined, formData);
-      expect(mockSignIn).toHaveBeenCalledWith("credentials", formData);
-      expect(result).toBeUndefined();
-    });
-
-    it("returns account-not-enabled message for AccountNotEnabled cause", async () => {
-      mockSignIn.mockRejectedValueOnce(
-        new AuthError("CallbackRouteError", { type: "AccountNotEnabled" }),
-      );
-      const result = await authenticate(undefined, formData);
-      expect(result).toBe("Your account has not been enabled yet.");
-    });
-
-    it("returns 'Invalid credentials.' for CredentialsSignin", async () => {
-      mockSignIn.mockRejectedValueOnce(new AuthError("CredentialsSignin"));
-      const result = await authenticate(undefined, formData);
-      expect(result).toBe("Invalid credentials.");
-    });
-
-    it("returns callback route error message for CallbackRouteError", async () => {
-      mockSignIn.mockRejectedValueOnce(new AuthError("CallbackRouteError"));
-      const result = await authenticate(undefined, formData);
-      expect(result).toBe("An error occurred during authentication.");
-    });
-
-    it("returns generic error for unhandled AuthError types", async () => {
-      mockSignIn.mockRejectedValueOnce(new AuthError("SomeOtherError"));
-      const result = await authenticate(undefined, formData);
-      expect(result).toBe("Something went wrong.");
-    });
-
-    it("re-throws non-AuthError exceptions", async () => {
-      mockSignIn.mockRejectedValueOnce(new Error("network failure"));
-      await expect(authenticate(undefined, formData)).rejects.toThrow(
-        "network failure",
-      );
-    });
-  });
-
-  describe("signup", () => {
-    const baseForm = makeFormData({
-      name: "Alice",
-      email: "alice@example.com",
-      password: "Secure123!",
-      confirmPassword: "Secure123!",
-    });
-
-    it("returns validation errors when required fields are invalid", async () => {
-      const form = makeFormData({
-        name: "",
-        email: "not-an-email",
-        password: "short",
-        confirmPassword: "short",
-      });
-      const result = await signup(undefined, form);
-      expect(result).toMatchObject({ errors: expect.any(Object) });
-    });
-
-    it("returns confirmPassword error when passwords do not match", async () => {
-      const form = makeFormData({
-        name: "Alice",
-        email: "alice@example.com",
-        password: "Secure123!",
-        confirmPassword: "Different1!",
-      });
-      const result = await signup(undefined, form);
-      expect(result).toMatchObject({
-        errors: { confirmPassword: expect.any(Array) },
-      });
-    });
-
-    it("sets accountEnabled=false when APPROVE_SIGNUPS=true", async () => {
-      const savedEnv = process.env.APPROVE_SIGNUPS;
-      process.env.APPROVE_SIGNUPS = "true";
-      mockInsertChain();
-
-      const result = await signup(undefined, baseForm);
-
-      expect(result).toEqual({ message: "success" });
-      const insertMock = sqlConn.insert as jest.Mock;
-      const valuesCalled = insertMock.mock.results[0].value.values;
-      expect(valuesCalled).toHaveBeenCalledWith(
-        expect.objectContaining({ accountEnabled: false }),
-      );
-      process.env.APPROVE_SIGNUPS = savedEnv;
-    });
-
-    it("sets accountEnabled=true when APPROVE_SIGNUPS is not 'true'", async () => {
-      const savedEnv = process.env.APPROVE_SIGNUPS;
-      process.env.APPROVE_SIGNUPS = "false";
-      mockInsertChain();
-
-      const result = await signup(undefined, baseForm);
-
-      expect(result).toEqual({ message: "success" });
-      const insertMock = sqlConn.insert as jest.Mock;
-      const valuesCalled = insertMock.mock.results[0].value.values;
-      expect(valuesCalled).toHaveBeenCalledWith(
-        expect.objectContaining({ accountEnabled: true }),
-      );
-      process.env.APPROVE_SIGNUPS = savedEnv;
-    });
-
-    it("returns failure message when DB insert throws", async () => {
-      (sqlConn.insert as jest.Mock).mockReturnValueOnce({
-        values: jest.fn().mockRejectedValueOnce(new Error("db error")),
-      });
-      const result = await signup(undefined, baseForm);
-      expect(result).toEqual({ message: "Failed to create account." });
-    });
-  });
-
   describe("createNewTimetableSet", () => {
     const validForm = makeFormData({ title: "My Set", description: "desc" });
 

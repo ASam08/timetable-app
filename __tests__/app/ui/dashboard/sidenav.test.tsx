@@ -18,8 +18,22 @@ jest.mock("lucide-react", () => ({
   LucideSettings: () => <div>LucideSettings</div>,
 }));
 
-jest.mock("@/auth", () => ({
-  signOut: jest.fn(),
+jest.mock("@/lib/auth", () => ({
+  auth: {
+    api: {
+      signOut: jest.fn(),
+    },
+  },
+}));
+
+jest.mock("next/headers", () => ({
+  headers: jest.fn().mockResolvedValue(new Headers()),
+}));
+
+jest.mock("next/navigation", () => ({
+  redirect: jest.fn(() => {
+    throw new Error("redirect");
+  }),
 }));
 
 jest.mock("next/link", () => {
@@ -29,10 +43,14 @@ jest.mock("next/link", () => {
 });
 
 import SideNav from "@/app/ui/dashboard/sidenav";
+import { redirect } from "next/navigation";
 
 describe("SideNav Component", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    (redirect as unknown as jest.Mock).mockImplementation(() => {
+      throw new Error("redirect");
+    });
   });
 
   it("renders navigation links correctly", () => {
@@ -59,6 +77,7 @@ describe("SideNav Component", () => {
     process.env.AUTH_ON = "true";
     const { getByText } = render(<SideNav />);
     expect(getByText("LucideLogOut")).toBeInTheDocument();
+    expect(getByText("Sign Out")).toBeInTheDocument();
   });
 
   it("does not render logout button when auth is off", () => {
@@ -71,6 +90,12 @@ describe("SideNav Component", () => {
     delete process.env.AUTH_ON;
     const { queryByText } = render(<SideNav />);
     expect(queryByText("LucideLogOut")).not.toBeInTheDocument();
+  });
+
+  it("treats AUTH_ON as case-insensitive", () => {
+    process.env.AUTH_ON = "TRUE";
+    const { getByText } = render(<SideNav />);
+    expect(getByText("LucideLogOut")).toBeInTheDocument();
   });
 
   it("links point to correct destinations", () => {
@@ -89,15 +114,21 @@ describe("SideNav Component", () => {
     );
   });
 
-  it("calls signOut with correct redirect when form is submitted", async () => {
-    const { signOut } = require("@/auth");
+  it("calls signOut with headers and redirects to /login when form is submitted", async () => {
+    const { auth } = require("@/lib/auth");
+    const { headers } = require("next/headers");
+    const mockHeaders = new Headers();
+    (headers as jest.Mock).mockResolvedValue(mockHeaders);
+    (redirect as unknown as jest.Mock).mockImplementation(() => {});
     process.env.AUTH_ON = "true";
+
     const { getByRole } = render(<SideNav />);
 
     await act(async () => {
       getByRole("button").click();
     });
 
-    expect(signOut).toHaveBeenCalledWith({ redirectTo: "/login" });
+    expect(auth.api.signOut).toHaveBeenCalledWith({ headers: mockHeaders });
+    expect(redirect).toHaveBeenCalledWith("/login");
   });
 });

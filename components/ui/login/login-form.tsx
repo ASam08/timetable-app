@@ -14,16 +14,14 @@ import {
   FieldDescription,
   FieldGroup,
   FieldLabel,
-  FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { useActionState } from "react";
-import { authenticate } from "@/lib/actions";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { CircleAlert } from "lucide-react";
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { authClient } from "@/lib/auth-client";
 
 export function LoginForm({
   className,
@@ -31,10 +29,9 @@ export function LoginForm({
 }: React.ComponentProps<"div">) {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
-  const [errorMessage, formAction, isPending] = useActionState(
-    authenticate,
-    undefined,
-  );
+  const router = useRouter();
+  const [errorMessage, setErrorMessage] = useState<string | undefined>();
+  const [isPending, setIsPending] = useState(false);
 
   useEffect(() => {
     if (errorMessage) {
@@ -44,37 +41,50 @@ export function LoginForm({
       });
     }
   }, [errorMessage]);
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setIsPending(true);
+    setErrorMessage(undefined);
+
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+
+    const { error } = await authClient.signIn.email({
+      email,
+      password,
+      callbackURL: callbackUrl,
+    });
+
+    if (error) {
+      if (error.code === "BANNED_USER") {
+        setErrorMessage(
+          "Your account has not been approved yet. Please contact the administrator.",
+        );
+      } else if (error.code === "INVALID_EMAIL_OR_PASSWORD") {
+        setErrorMessage("Invalid credentials.");
+      } else {
+        setErrorMessage("Something went wrong.");
+        console.log("auth error:", error);
+      }
+      setIsPending(false);
+      return;
+    }
+
+    router.push(callbackUrl);
+  }
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-xl">Welcome back</CardTitle>
-          <CardDescription>
-            Login with your email and password
-            {/* Login with your Apple or Google account */}
-          </CardDescription>
+          <CardDescription>Login with your email and password</CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={formAction}>
+          <form onSubmit={handleSubmit}>
             <FieldGroup>
-              {/* <Field>
-                TODO: Implement social provider auth
-                <Button variant="outline" type="button">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                    <path d="" fill="currentColor" />
-                  </svg>
-                  Login with Apple
-                </Button>
-                <Button variant="outline" type="button">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                    <path d="" fill="currentColor" />
-                  </svg>
-                  Login with Google
-                </Button>
-              </Field>
-              <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
-                Or continue with
-              </FieldSeparator> */}
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
                 <Input
@@ -88,19 +98,16 @@ export function LoginForm({
               <Field>
                 <div className="flex items-center">
                   <FieldLabel htmlFor="password">Password</FieldLabel>
-                  {/* <a
-                    href="#"
-                    className="ml-auto text-sm underline-offset-4 hover:underline"
-                  >
-                    Forgot your password?
-                  </a> */}
                 </div>
                 <Input id="password" type="password" name="password" required />
               </Field>
               <Field>
-                <input type="hidden" name="redirectTo" value={callbackUrl} />
-                <Button type="submit" aria-disabled={isPending}>
-                  Login
+                <Button
+                  type="submit"
+                  aria-disabled={isPending}
+                  disabled={isPending}
+                >
+                  {isPending ? "Logging in..." : "Login"}
                 </Button>
                 <div
                   className="flex h-8 items-end space-x-1"
@@ -115,15 +122,13 @@ export function LoginForm({
                   )}
                 </div>
                 <FieldDescription className="text-center">
-                  Don't have an account?{" "}
-                  <Link href="/signup">Sign up</Link>{" "}
+                  Don't have an account? <Link href="/signup">Sign up</Link>
                 </FieldDescription>
               </Field>
             </FieldGroup>
           </form>
         </CardContent>
       </Card>
-      {/* TODO: add T&C's and privacy policy */}
       <FieldDescription className="px-6 text-center">
         By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
         and <a href="#">Privacy Policy</a>.

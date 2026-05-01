@@ -31,8 +31,16 @@ jest.mock("@/lib/db", () => {
   };
 });
 
-jest.mock("@/auth", () => ({
-  auth: jest.fn(),
+jest.mock("@/lib/auth", () => ({
+  auth: {
+    api: {
+      getSession: jest.fn(),
+    },
+  },
+}));
+
+jest.mock("next/headers", () => ({
+  headers: jest.fn().mockResolvedValue(new Headers()),
 }));
 
 import {
@@ -71,6 +79,10 @@ beforeEach(() => {
   });
   mockSelect.mockReturnValue({ from: mockFrom });
   mockSelectDistinct.mockReturnValue({ from: mockFrom });
+
+  // Re-apply after resetAllMocks wipes implementations
+  const { auth } = require("@/lib/auth");
+  auth.api.getSession = jest.fn();
 });
 
 describe("getUserID", () => {
@@ -90,22 +102,22 @@ describe("getUserID", () => {
     });
 
     it("returns the user ID from the session", async () => {
-      const { auth } = require("@/auth");
-      auth.mockResolvedValueOnce({ user: { id: "user-123" } });
+      const { auth } = require("@/lib/auth");
+      auth.api.getSession.mockResolvedValueOnce({ user: { id: "user-123" } });
       const result = await getUserID();
       expect(result).toBe("user-123");
     });
 
     it("returns null when there is no session", async () => {
-      const { auth } = require("@/auth");
-      auth.mockResolvedValueOnce(null);
+      const { auth } = require("@/lib/auth");
+      auth.api.getSession.mockResolvedValueOnce(null);
       const result = await getUserID();
       expect(result).toBeNull();
     });
 
     it("returns null when session has no user id", async () => {
-      const { auth } = require("@/auth");
-      auth.mockResolvedValueOnce({ user: {} });
+      const { auth } = require("@/lib/auth");
+      auth.api.getSession.mockResolvedValueOnce({ user: {} });
       const result = await getUserID();
       expect(result).toBeNull();
     });
@@ -213,6 +225,13 @@ describe("getCurrentBlock", () => {
     const result = await getCurrentBlock("set-123", 1, "09:30");
     expect(result).toBeNull();
   });
+
+  it("throws when the database throws", async () => {
+    mockLimit.mockRejectedValueOnce(new Error("DB error"));
+    await expect(getCurrentBlock("set-123", 1, "09:30")).rejects.toThrow(
+      "DB error",
+    );
+  });
 });
 
 describe("getNextBlock", () => {
@@ -235,6 +254,13 @@ describe("getNextBlock", () => {
     const result = await getNextBlock("set-123", 1, "09:30");
     expect(result).toBeNull();
   });
+
+  it("throws when the database throws", async () => {
+    mockLimit.mockRejectedValueOnce(new Error("DB error"));
+    await expect(getNextBlock("set-123", 1, "09:30")).rejects.toThrow(
+      "DB error",
+    );
+  });
 });
 
 describe("getNextBreak", () => {
@@ -256,6 +282,29 @@ describe("getNextBreak", () => {
     mockLimit.mockResolvedValueOnce([]);
     const result = await getNextBreak("set-123", 1, "09:30");
     expect(result).toBeNull();
+  });
+
+  it("throws when the database throws", async () => {
+    mockLimit.mockRejectedValueOnce(new Error("DB error"));
+    await expect(getNextBreak("set-123", 1, "09:30")).rejects.toThrow(
+      "DB error",
+    );
+  });
+
+  it("uses the leftJoin chain to find a break block", async () => {
+    const fakeBlock = {
+      id: "block-4",
+      start_time: "12:00",
+      end_time: "13:00",
+      day_of_week: 2,
+      subject: "Art",
+      location: "Room 4",
+    };
+    // getNextBreak resolves via .limit() at the end of the leftJoin chain
+    mockLimit.mockResolvedValueOnce([fakeBlock]);
+    const result = await getNextBreak("set-123", 2, "11:30");
+    expect(result).toEqual(fakeBlock);
+    expect(mockLeftJoin).toHaveBeenCalled();
   });
 });
 
