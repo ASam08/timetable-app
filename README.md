@@ -52,7 +52,7 @@ A simple, self-hostable weekly timetable app. Whether you're a student keeping t
 | Language   | TypeScript                                        |
 | Database   | PostgreSQL                                        |
 | ORM        | [Drizzle](https://orm.drizzle.team/)              |
-| Auth       | [Auth.js (NextAuth)](https://authjs.dev)          |
+| Auth       | [Better-Auth](https://better-auth.com)            |
 | UI         | [shadcn/ui](https://ui.shadcn.com) + Tailwind CSS |
 | Deployment | Docker + Docker Compose                           |
 
@@ -85,9 +85,9 @@ services:
       POSTGRES_DB: tempus
       POSTGRES_PORT: 5432
       POSTGRES_HOST: tempus_db
-      AUTH_SECRET: # Run: openssl rand -base64 32
+      BETTER_AUTH_SECRET: # Run: openssl rand -base64 32
+      BETTER_AUTH_URL: # set to your applications URL
       AUTH_ON: true # Change to false to remove auth, single user only
-      AUTH_TRUST_HOST: true # Change to false to stop auto-approving new user sign-ups
     restart: unless-stopped
 
   tempus_db:
@@ -113,7 +113,7 @@ Open `compose.yaml` and adjust the environment variables. See [the enviornment v
 
 Please remember to change the password from "Tempus".
 
-_<a name="auto_approve_note"></a>Note - if you disable auto-approving new user sign-ups, you will currently have to approve users in the database itself manually. Change the "account_enabled" field to true in the users table for the relevant user. This will be addressed in a future release._
+_<a name="auto_approve_note"></a>Note - if you disable auto-approving new user sign-ups, you will currently have to approve users in the database itself manually. Change the "banned" field to true in the users table for the relevant user. This will be addressed in a future release._
 
 **3. Start the app**
 
@@ -131,13 +131,14 @@ Visit [http://localhost:3000](http://localhost:3000) and create your account.
 
 ## Environment Variables
 
-The following environnment variables are available:
+The following environment variables are available:
+
 | Variable | Required? | Default | Notes |
 | -------- | --------- | ------- | ----- |
-| `AUTH_ON` | No | FALSE | Adding auth allows for multiple users|
-| `AUTH_SECRET`| Yes | - | Run `openssl rand -base64 32` to generate|
-| `APPROVE_SIGNUPS`| No | FALSE | Changing to true will stop new users signing in until their account is approved. Currently a manual process, see [the auto approve note above](#auto_approve_note)|
-|`AUTH_TRUST_HOST`| No (recommended) | - | Required when deploying behind a reverse proxy to avoid untrusted errors |
+| `AUTH_ON` | No | `false` | Set to `true` to enable authentication and multi-user support |
+| `BETTER_AUTH_SECRET` | Yes | - | Run `openssl rand -base64 32` to generate |
+| `BETTER_AUTH_URL` | Yes | - | Set to your app's base URL, e.g. `http://localhost:3000` |
+| `APPROVE_SIGNUPS` | No | `false` | Set to `true` to require admin approval before new users can sign in. To approve a user, set `banned = false` and `ban_reason = NULL` in the `users` table for the relevant user. A proper admin UI for this is planned for a future release. |
 
 ---
 
