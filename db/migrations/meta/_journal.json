@@ -36,6 +36,13 @@
       "when": 1777453935665,
       "tag": "0004_crazy_senator_kelly",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1777714174951,
+      "tag": "0005_sudden_molten_man",
+      "breakpoints": true
     }
   ]
 }
