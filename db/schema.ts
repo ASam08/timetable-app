@@ -11,25 +11,6 @@ import {
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
-export const timetableSets = pgTable("timetable_sets", {
-  id: uuid().defaultRandom().primaryKey().notNull(),
-  ownerId: uuid("owner_id").notNull(),
-  title: varchar({ length: 255 }).notNull(),
-  description: text(),
-  createdAt: timestamp("created_at", { mode: "string" }).default(
-    sql`CURRENT_TIMESTAMP`,
-  ),
-  updatedAt: timestamp("updated_at", { mode: "string" }).default(
-    sql`CURRENT_TIMESTAMP`,
-  ),
-});
-
-export const userTimetableSets = pgTable("user_timetable_sets", {
-  id: uuid().defaultRandom().primaryKey().notNull(),
-  userId: uuid("user_id").notNull(),
-  timetableSetId: uuid("timetable_set_id").notNull(),
-});
-
 export const users = pgTable(
   "users",
   {
@@ -52,11 +33,38 @@ export const users = pgTable(
   (table) => [unique("users_email_key").on(table.email)],
 );
 
+export const timetableSets = pgTable("timetable_sets", {
+  id: uuid().defaultRandom().primaryKey().notNull(),
+  ownerId: uuid("owner_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  title: varchar({ length: 255 }).notNull(),
+  description: text(),
+  createdAt: timestamp("created_at", { mode: "string" }).default(
+    sql`CURRENT_TIMESTAMP`,
+  ),
+  updatedAt: timestamp("updated_at", { mode: "string" }).default(
+    sql`CURRENT_TIMESTAMP`,
+  ),
+});
+
+export const userTimetableSets = pgTable("user_timetable_sets", {
+  id: uuid().defaultRandom().primaryKey().notNull(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  timetableSetId: uuid("timetable_set_id")
+    .notNull()
+    .references(() => timetableSets.id, { onDelete: "cascade" }),
+});
+
 export const userSettings = pgTable(
   "user_settings",
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
-    userId: uuid("user_id").notNull(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
     settingKey: varchar("setting_key", { length: 255 }).notNull(),
     settingValue: text("setting_value").notNull(),
     createdAt: timestamp("created_at", { mode: "string" }).default(
@@ -73,7 +81,9 @@ export const userSettings = pgTable(
 
 export const timetableBlocks = pgTable("timetable_blocks", {
   id: uuid().defaultRandom().primaryKey().notNull(),
-  timetableSetId: uuid("timetable_set_id").notNull(),
+  timetableSetId: uuid("timetable_set_id")
+    .notNull()
+    .references(() => timetableSets.id, { onDelete: "cascade" }),
   startTime: time("start_time").notNull(),
   endTime: time("end_time").notNull(),
   dayOfWeek: integer("day_of_week").notNull(),
@@ -116,7 +126,7 @@ export const account = pgTable("account", {
     mode: "date",
   }),
   scope: text("scope"),
-  password: text("password"), // bcrypt hashes migrate here
+  password: text("password"),
   createdAt: timestamp("created_at", { mode: "date" }).notNull(),
   updatedAt: timestamp("updated_at", { mode: "date" }).notNull(),
 });
